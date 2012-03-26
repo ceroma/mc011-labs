@@ -40,26 +40,26 @@ header
   ;
 
 author
-  : BACK_SLASH AUTHOR LEFT_CURLY WORD+ RIGHT_CURLY
+  : AUTHOR LEFT_CURLY WORD+ RIGHT_CURLY
   ;
 
 title
-  : BACK_SLASH TITLE LEFT_CURLY w=words RIGHT_CURLY {self.titleText = w}
+  : TITLE LEFT_CURLY w=words RIGHT_CURLY {self.titleText = w}
   ;
 
 usepackage
-  : BACK_SLASH USEPACKAGE (LEFT_SQUARE WORD+ RIGHT_SQUARE)? LEFT_CURLY WORD+ RIGHT_CURLY
+  : USEPACKAGE (LEFT_SQUARE WORD+ RIGHT_SQUARE)? LEFT_CURLY WORD+ RIGHT_CURLY
   ;
 
 documentclass
-  : BACK_SLASH DOCUMENTCLASS (LEFT_SQUARE WORD+ RIGHT_SQUARE)? LEFT_CURLY WORD+ RIGHT_CURLY
+  : DOCUMENTCLASS (LEFT_SQUARE WORD+ RIGHT_SQUARE)? LEFT_CURLY WORD+ RIGHT_CURLY
   ;
 
 document returns [body]
 @init {body = ''}
-  : BACK_SLASH BEGIN LEFT_CURLY DOCUMENT RIGHT_CURLY
+  : BEGIN LEFT_CURLY DOCUMENT RIGHT_CURLY
     (c=content {body += c})*
-    BACK_SLASH END LEFT_CURLY DOCUMENT RIGHT_CURLY
+    END LEFT_CURLY DOCUMENT RIGHT_CURLY
   ;
 
 content returns [content]
@@ -69,28 +69,28 @@ content returns [content]
   ;
 
 maketitle returns [title]
-  : BACK_SLASH MAKETITLE {title = "<h1>" + self.titleText + "</h1>\n"}
+  : MAKETITLE {title = "<h1>" + self.titleText + "</h1>\n"}
   ;
 
 text returns [text]
-  : BACK_SLASH BOLD LEFT_CURLY t=text RIGHT_CURLY {text = '<b>' + t + '</b>'}
-  | BACK_SLASH ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
-  | BACK_SLASH IMAGE LEFT_CURLY t=text RIGHT_CURLY {text = '<img src="' + t + '"/>'}
+  : BOLD LEFT_CURLY t=text RIGHT_CURLY {text = '<b>' + t + '</b>'}
+  | ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
+  | IMAGE LEFT_CURLY t=text RIGHT_CURLY {text = '<img src="' + t + '"/>'}
   | MATH_SIGN t=words MATH_SIGN {text = "\(" + t + "\)"}
   | t=words {text = t }
   ;
 
 itemize returns [command]
 @init {command = ''}
-  : BACK_SLASH BEGIN LEFT_CURLY ITEMIZE RIGHT_CURLY {command += "<ul>\n"}
+  : BEGIN LEFT_CURLY ITEMIZE RIGHT_CURLY {command += "<ul>\n"}
     (i=item {command += i})*
-    BACK_SLASH END LEFT_CURLY ITEMIZE RIGHT_CURLY {command += "</ul>\n"}
+    END LEFT_CURLY ITEMIZE RIGHT_CURLY {command += "</ul>\n"}
   ;
     
 item returns [item]
 @init {item = []}
 @after {item = "<li>" + ' '.join(item) + "</li>\n"}
-  : BACK_SLASH ITEM (c=content {item.append(c)})+
+  : ITEM (c=content {item.append(c)})+
   ;
 
 words returns [words]
@@ -99,30 +99,30 @@ words returns [words]
   : (w1=WORD {words.append($w1.text)})+
   ;
 
-BACK_SLASH: '\\';
 MATH_SIGN: '$';
 LEFT_CURLY: '{';
 RIGHT_CURLY: '}';
 LEFT_SQUARE: '[';
 RIGHT_SQUARE: ']';
 
-AUTHOR: 'author';
-TITLE: 'title';
+AUTHOR: BACK_SLASH 'author';
+TITLE: BACK_SLASH 'title';
 DOCUMENT: 'document';
-MAKETITLE: 'maketitle';
-USEPACKAGE: 'usepackage';
-DOCUMENTCLASS: 'documentclass';
-BOLD: 'textbf';
-ITALIC: 'textit';
-BEGIN: 'begin';
-END: 'end';
+MAKETITLE: BACK_SLASH 'maketitle';
+USEPACKAGE: BACK_SLASH 'usepackage';
+DOCUMENTCLASS: BACK_SLASH 'documentclass';
+BOLD: BACK_SLASH 'textbf';
+ITALIC: BACK_SLASH 'textit';
+BEGIN: BACK_SLASH 'begin';
+END: BACK_SLASH 'end';
 ITEMIZE: 'itemize';
-ITEM: 'item';
-IMAGE: 'includegraphics';
+ITEM: BACK_SLASH 'item';
+IMAGE: BACK_SLASH 'includegraphics';
 
 WORD: (CHAR | DIGIT | SYMB)+;
 WHITESPACE: (' ' | '\t' | '\n')+ {$channel = HIDDEN};
 
 fragment DIGIT: '0'..'9';
 fragment CHAR: 'a'..'z' | 'A'..'Z';
-fragment SYMB: '-' | ',' | ':' | '.' | '^' | '+' | '=' | '_';
+fragment SYMB: '-' | ',' | ':' | '.' | '^' | '+' | '=' | '_' | '\\' | '(' | ')';
+fragment BACK_SLASH: '\\';
