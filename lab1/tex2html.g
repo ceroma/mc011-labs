@@ -15,15 +15,21 @@ def main(argv, otherArg=None):
   tokens = CommonTokenStream(lexer)
   parser = tex2htmlParser(tokens)
 
-  print '<head><script src="jsMath/easy/load.js"></script></head>'
-  print '<body>' + parser.result() + '</body>'
+  title, body = parser.result()
+  print '<head>'
+  print '  <title>' + title + '</title>'
+  print '  <script src="jsMath/easy/load.js"></script>'
+  print '</head>'
+  print '<body>'
+  print body
+  print '</body>'
 }
 
 @init {self.titleText = ''}
 
-result returns [html]
-@init {html = ''}
-  : header* d=document {html = d}
+result returns [result]
+@init {result = ['', '']}
+  : header* d=document {result = [self.titleText, d]}
   ;
 
 header
