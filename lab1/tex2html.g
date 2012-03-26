@@ -18,14 +18,34 @@ def main(argv, otherArg=None):
   print parser.result()
 }
 
+@init {self.titleText = ''}
+
 result returns [html]
 @init {html = ''}
-  : (s=statement {html += s})*
+  : header* (c=content {html += c})*
   ;
 
-statement returns [statement]
-  : i=itemize {statement = i}
-  | t=text {statement = t}
+header
+  : author
+  | title
+  ;
+
+author
+  : BACK_SLASH AUTHOR LEFT_BRACK WORD+ RIGHT_BRACK
+  ;
+
+title
+  : BACK_SLASH TITLE LEFT_BRACK w=words RIGHT_BRACK {self.titleText = w}
+  ;
+
+content returns [content]
+  : t=maketitle {content = t}
+  | i=itemize {content = i}
+  | t=text {content = t}
+  ;
+
+maketitle returns [title]
+  : BACK_SLASH MAKETITLE {title = "<h1>" + self.titleText + "</h1>\n"}
   ;
 
 text returns [text]
@@ -45,7 +65,7 @@ itemize returns [command]
 item returns [item]
 @init {item = []}
 @after {item = "<li>" + ' '.join(item) + "</li>\n"}
-  : BACK_SLASH ITEM (s=statement {item.append(s)})+
+  : BACK_SLASH ITEM (c=content {item.append(c)})+
   ;
 
 words returns [words]
@@ -59,7 +79,9 @@ MATH_SIGN: '$';
 LEFT_BRACK: '{';
 RIGHT_BRACK: '}';
 
+AUTHOR: 'author';
 TITLE: 'title';
+MAKETITLE: 'maketitle';
 BOLD: 'textbf';
 ITALIC: 'textit';
 BEGIN: 'begin';
