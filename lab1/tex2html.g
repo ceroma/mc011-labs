@@ -28,6 +28,8 @@ result returns [html]
 header
   : author
   | title
+  | usepackage
+  | documentclass
   ;
 
 author
@@ -36,6 +38,14 @@ author
 
 title
   : BACK_SLASH TITLE LEFT_CURLY w=words RIGHT_CURLY {self.titleText = w}
+  ;
+
+usepackage
+  : BACK_SLASH USEPACKAGE (LEFT_SQUARE WORD+ RIGHT_SQUARE)? LEFT_CURLY WORD+ RIGHT_CURLY
+  ;
+
+documentclass
+  : BACK_SLASH DOCUMENTCLASS (LEFT_SQUARE WORD+ RIGHT_SQUARE)? LEFT_CURLY WORD+ RIGHT_CURLY
   ;
 
 content returns [content]
@@ -78,10 +88,14 @@ BACK_SLASH: '\\';
 MATH_SIGN: '$';
 LEFT_CURLY: '{';
 RIGHT_CURLY: '}';
+LEFT_SQUARE: '[';
+RIGHT_SQUARE: ']';
 
 AUTHOR: 'author';
 TITLE: 'title';
 MAKETITLE: 'maketitle';
+USEPACKAGE: 'usepackage';
+DOCUMENTCLASS: 'documentclass';
 BOLD: 'textbf';
 ITALIC: 'textit';
 BEGIN: 'begin';
