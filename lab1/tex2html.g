@@ -22,7 +22,7 @@ def main(argv, otherArg=None):
 
 result returns [html]
 @init {html = ''}
-  : header* (c=content {html += c})*
+  : header* d=document {html = d}
   ;
 
 header
@@ -46,6 +46,13 @@ usepackage
 
 documentclass
   : BACK_SLASH DOCUMENTCLASS (LEFT_SQUARE WORD+ RIGHT_SQUARE)? LEFT_CURLY WORD+ RIGHT_CURLY
+  ;
+
+document returns [body]
+@init {body = ''}
+  : BACK_SLASH BEGIN LEFT_CURLY DOCUMENT RIGHT_CURLY
+    (c=content {body += c})*
+    BACK_SLASH END LEFT_CURLY DOCUMENT RIGHT_CURLY
   ;
 
 content returns [content]
@@ -93,6 +100,7 @@ RIGHT_SQUARE: ']';
 
 AUTHOR: 'author';
 TITLE: 'title';
+DOCUMENT: 'document';
 MAKETITLE: 'maketitle';
 USEPACKAGE: 'usepackage';
 DOCUMENTCLASS: 'documentclass';
