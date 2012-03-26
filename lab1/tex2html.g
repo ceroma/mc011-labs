@@ -56,9 +56,10 @@ documentclass
   ;
 
 document returns [body]
-@init {body = ''}
+@init {body = []}
+@after {body = ' '.join(body)}
   : BEGIN LEFT_CURLY DOCUMENT RIGHT_CURLY
-    (c=content {body += c})*
+    (c=content {body.append(c)})*
     END LEFT_CURLY DOCUMENT RIGHT_CURLY
   ;
 
@@ -76,7 +77,7 @@ text returns [text]
   : BOLD LEFT_CURLY t=text RIGHT_CURLY {text = '<b>' + t + '</b>'}
   | ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
   | IMAGE LEFT_CURLY t=text RIGHT_CURLY {text = '<img src="' + t + '"/>'}
-  | MATH_SIGN t=words MATH_SIGN {text = "\(" + t + "\)"}
+  | MATH_SIGN t=words MATH_SIGN {text = '\(' + t + '\)'}
   | t=words {text = t }
   ;
 
