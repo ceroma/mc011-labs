@@ -15,7 +15,8 @@ def main(argv, otherArg=None):
   tokens = CommonTokenStream(lexer)
   parser = tex2htmlParser(tokens)
 
-  print parser.result()
+  print '<head><script src="jsMath/easy/load.js"></script></head>'
+  print '<body>' + parser.result() + '</body>'
 }
 
 @init {self.titleText = ''}
@@ -69,7 +70,7 @@ text returns [text]
   : BACK_SLASH BOLD LEFT_CURLY t=text RIGHT_CURLY {text = '<b>' + t + '</b>'}
   | BACK_SLASH ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
   | BACK_SLASH IMAGE LEFT_CURLY t=text RIGHT_CURLY {text = '<img src="' + t + '"/>'}
-  | MATH_SIGN t=words MATH_SIGN {text = "<div class=\"math\">" + t + "</div>"}
+  | MATH_SIGN t=words MATH_SIGN {text = "\(" + t + "\)"}
   | t=words {text = t }
   ;
 
@@ -118,4 +119,4 @@ WHITESPACE: (' ' | '\t' | '\n')+ {$channel = HIDDEN};
 
 fragment DIGIT: '0'..'9';
 fragment CHAR: 'a'..'z' | 'A'..'Z';
-fragment SYMB: '-' | ',' | ':' | '.';
+fragment SYMB: '-' | ',' | ':' | '.' | '^' | '+' | '=' | '_';
