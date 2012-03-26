@@ -111,8 +111,9 @@ END: 'end';
 ITEMIZE: 'itemize';
 ITEM: 'item';
 
-WORD: (CHAR | DIGIT)+;
+WORD: (CHAR | DIGIT | SYMB)+;
 WHITESPACE: (' ' | '\t' | '\n')+ {$channel = HIDDEN};
 
 fragment DIGIT: '0'..'9';
 fragment CHAR: 'a'..'z' | 'A'..'Z';
+fragment SYMB: '-' | ',' | ':' | '.';
