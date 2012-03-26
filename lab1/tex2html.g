@@ -96,7 +96,9 @@ itemize returns [command]
 item returns [item]
 @init {item = []}
 @after {item = "<li>" + ' '.join(item) + "</li>\n"}
-  : ITEM (c=content {item.append(c)})+
+  : ITEM
+    (LEFT_SQUARE w=words RIGHT_SQUARE {item.append('<b>' + w + '</b>')})?
+    (c=content {item.append(c)})+
   ;
 
 words returns [words]
