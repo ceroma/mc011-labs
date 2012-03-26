@@ -68,6 +68,7 @@ maketitle returns [title]
 text returns [text]
   : BACK_SLASH BOLD LEFT_CURLY t=text RIGHT_CURLY {text = '<b>' + t + '</b>'}
   | BACK_SLASH ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
+  | BACK_SLASH IMAGE LEFT_CURLY t=text RIGHT_CURLY {text = '<img src="' + t + '"/>'}
   | MATH_SIGN t=words MATH_SIGN {text = "<div class=\"math\">" + t + "</div>"}
   | t=words {text = t }
   ;
@@ -110,6 +111,7 @@ BEGIN: 'begin';
 END: 'end';
 ITEMIZE: 'itemize';
 ITEM: 'item';
+IMAGE: 'includegraphics';
 
 WORD: (CHAR | DIGIT | SYMB)+;
 WHITESPACE: (' ' | '\t' | '\n')+ {$channel = HIDDEN};
