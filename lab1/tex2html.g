@@ -5,6 +5,7 @@ options {
 }
 
 @header {
+import os
 from tex2htmlLexer import tex2htmlLexer
 }
 
@@ -15,10 +16,14 @@ def main(argv, otherArg=None):
   tokens = CommonTokenStream(lexer)
   parser = tex2htmlParser(tokens)
 
+  # Find the absolute path of jsMath library:
+  src_path = os.path.dirname(os.path.realpath(__file__))
+  js_path = os.path.join(src_path, 'jsMath', 'easy', 'load.js')
+
   title, body = parser.result()
   print '<head>'
   print '  <title>' + title + '</title>'
-  print '  <script src="jsMath/easy/load.js"></script>'
+  print '  <script src="' + js_path + '"></script>'
   print '</head>'
   print '<body>'
   print body
@@ -78,7 +83,7 @@ text returns [text]
   | ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
   | IMAGE LEFT_CURLY t=text RIGHT_CURLY {text = '<img src="' + t + '"/>'}
   | MATH_SIGN t=words MATH_SIGN {text = '\(' + t + '\)'}
-  | t=words {text = t }
+  | t=words {text = t}
   ;
 
 itemize returns [command]
