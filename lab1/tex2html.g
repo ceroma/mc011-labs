@@ -111,18 +111,20 @@ RIGHT_CURLY: '}';
 LEFT_SQUARE: '[';
 RIGHT_SQUARE: ']';
 
-AUTHOR: BACK_SLASH 'author';
 TITLE: BACK_SLASH 'title';
-DOCUMENT: 'document';
-MAKETITLE: BACK_SLASH 'maketitle';
+AUTHOR: BACK_SLASH 'author';
 USEPACKAGE: BACK_SLASH 'usepackage';
 DOCUMENTCLASS: BACK_SLASH 'documentclass';
+
+ITEMIZE: 'itemize';
+DOCUMENT: 'document';
+END: BACK_SLASH 'end';
+BEGIN: BACK_SLASH 'begin';
+
+ITEM: BACK_SLASH 'item';
 BOLD: BACK_SLASH 'textbf';
 ITALIC: BACK_SLASH 'textit';
-BEGIN: BACK_SLASH 'begin';
-END: BACK_SLASH 'end';
-ITEMIZE: 'itemize';
-ITEM: BACK_SLASH 'item';
+MAKETITLE: BACK_SLASH 'maketitle';
 IMAGE: BACK_SLASH 'includegraphics';
 
 WORD: (CHAR | DIGIT | SYMB)+;
