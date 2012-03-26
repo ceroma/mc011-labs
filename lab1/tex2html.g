@@ -31,11 +31,11 @@ header
   ;
 
 author
-  : BACK_SLASH AUTHOR LEFT_BRACK WORD+ RIGHT_BRACK
+  : BACK_SLASH AUTHOR LEFT_CURLY WORD+ RIGHT_CURLY
   ;
 
 title
-  : BACK_SLASH TITLE LEFT_BRACK w=words RIGHT_BRACK {self.titleText = w}
+  : BACK_SLASH TITLE LEFT_CURLY w=words RIGHT_CURLY {self.titleText = w}
   ;
 
 content returns [content]
@@ -49,17 +49,17 @@ maketitle returns [title]
   ;
 
 text returns [text]
-  : BACK_SLASH BOLD LEFT_BRACK t=text RIGHT_BRACK {text = '<b>' + t + '</b>'}
-  | BACK_SLASH ITALIC LEFT_BRACK t=text RIGHT_BRACK {text = '<i>' + t + '</i>'}
+  : BACK_SLASH BOLD LEFT_CURLY t=text RIGHT_CURLY {text = '<b>' + t + '</b>'}
+  | BACK_SLASH ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
   | MATH_SIGN t=words MATH_SIGN {text = "<div class=\"math\">" + t + "</div>"}
   | t=words {text = t }
   ;
 
 itemize returns [command]
 @init {command = ''}
-  : BACK_SLASH BEGIN LEFT_BRACK ITEMIZE RIGHT_BRACK {command += "<ul>\n"}
+  : BACK_SLASH BEGIN LEFT_CURLY ITEMIZE RIGHT_CURLY {command += "<ul>\n"}
     (i=item {command += i})*
-    BACK_SLASH END LEFT_BRACK ITEMIZE RIGHT_BRACK {command += "</ul>\n"}
+    BACK_SLASH END LEFT_CURLY ITEMIZE RIGHT_CURLY {command += "</ul>\n"}
   ;
     
 item returns [item]
@@ -76,8 +76,8 @@ words returns [words]
 
 BACK_SLASH: '\\';
 MATH_SIGN: '$';
-LEFT_BRACK: '{';
-RIGHT_BRACK: '}';
+LEFT_CURLY: '{';
+RIGHT_CURLY: '}';
 
 AUTHOR: 'author';
 TITLE: 'title';
