@@ -22,21 +22,28 @@ def main(argv, otherArg=None):
 
   title, body = parser.result()
   print '<head>'
-  print '  <title>' + title + '</title>'
-  print '  <script src="' + js_path + '"></script>'
+  print ' <title>' + title + '</title>'
+  print ' <script src="' + js_path + '"></script>'
   print '</head>'
   print '<body>'
   print body
   print '</body>'
 }
 
+// Container for the title in "\title{...}":
 @init {self.titleText = ''}
 
+/*---------------------------------------------------------------------------*
+ *                               Parser  Rules                               *
+ *---------------------------------------------------------------------------*/
+
+// Start rule:
 result returns [result]
 @init {result = ['', '']}
   : header* d=document {result = [self.titleText, d]}
   ;
 
+// Header definitions, currently ignore everything except the title:
 header
   : author
   | title
@@ -45,12 +52,15 @@ header
   | PARAGRAPH
   ;
 
-author
-  : AUTHOR LEFT_CURLY WORD+ RIGHT_CURLY
-  ;
-
+// Title definition, save it for a "\maketitle" in the document area:
 title
   : TITLE LEFT_CURLY w=words RIGHT_CURLY {self.titleText = w}
+  ;
+
+// These definitions are currently ignored, but are left as separate rules for
+// completeness:
+author
+  : AUTHOR LEFT_CURLY WORD+ RIGHT_CURLY
   ;
 
 usepackage
@@ -61,6 +71,7 @@ documentclass
   : DOCUMENTCLASS (LEFT_SQUARE WORD+ RIGHT_SQUARE)? LEFT_CURLY WORD+ RIGHT_CURLY
   ;
 
+// Main area, between "\begin{document}" and "\end{document}":
 document returns [body]
 @init {body = []}
 @after {body = ' '.join(body)}
@@ -69,32 +80,32 @@ document returns [body]
     END LEFT_CURLY DOCUMENT RIGHT_CURLY
   ;
 
+// Content of the document can be a command, like "\maketitle" and
+// "\begin{itemize}", or plain text:
 content returns [content]
   : t=maketitle {content = t}
   | i=itemize {content = i}
+  | i=image {content = i}
   | t=text {content = t}
   ;
 
+// "\maketitle" retrieves the previously saved title:
 maketitle returns [title]
   : MAKETITLE {title = "<h1>" + self.titleText + "</h1>\n"}
   ;
 
-text returns [text]
-  : BOLD LEFT_CURLY t=text RIGHT_CURLY {text = '<b>' + t + '</b>'}
-  | ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
-  | IMAGE LEFT_CURLY t=text RIGHT_CURLY {text = '<img src="' + t + '"/>'}
-  | MATH_SIGN t=words MATH_SIGN {text = '\(' + t + '\)'}
-  | PARAGRAPH {text = "\n<br>\n"}
-  | t=words {text = t}
+// "\begin{itemize}" expects a list of "\item"s:
+itemize returns [list]
+@init {list = ''}
+  : BEGIN LEFT_CURLY ITEMIZE RIGHT_CURLY {list += "<ul>\n"}
+    (i=item {list += i})*
+    END LEFT_CURLY ITEMIZE RIGHT_CURLY {list += "</ul>\n"}
   ;
 
-itemize returns [command]
-@init {command = ''}
-  : BEGIN LEFT_CURLY ITEMIZE RIGHT_CURLY {command += "<ul>\n"}
-    (i=item {command += i})*
-    END LEFT_CURLY ITEMIZE RIGHT_CURLY {command += "</ul>\n"}
-  ;
-    
+// Everything after a "\item" will be rendered inside "<li>..</li>" tags, and
+// can also be another unordered list, so any valid document content is
+// accepted. Also, an optional description (between "[..]") will be rendered
+// in bold at the beginning of the item:
 item returns [item]
 @init {item = []}
 @after {item = "<li>" + ' '.join(item) + "</li>\n"}
@@ -103,42 +114,74 @@ item returns [item]
     (c=content {item.append(c)})+
   ;
 
+// "\includegraphics{filename}" renders an "<img>" tag:
+image returns [img]
+  : IMAGE LEFT_CURLY w=WORD RIGHT_CURLY {img = '<img src="' + $w.text + '"/>'}
+  ;
+
+// Plain text and it's modifiers (bold and italic). Note that we could bold an
+// italic text, for example:
+text returns [text]
+  : BOLD LEFT_CURLY t=text RIGHT_CURLY {text = '<b>' + t + '</b>'}
+  | ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
+  | MATH_SIGN t=words MATH_SIGN {text = '\(' + t + '\)'}
+  | PARAGRAPH {text = "\n<br>\n"}
+  | t=words {text = t}
+  ;
+
+// Sequence of words, rendered separated by a space:
 words returns [words]
 @init {words = []}
 @after {words = ' '.join(words)}
-  : (w1=WORD {words.append($w1.text)})+
+  : (w=WORD {words.append($w.text)})+
   ;
 
+/*---------------------------------------------------------------------------*
+ *                                Lexer Rules                                *
+ *---------------------------------------------------------------------------*/
+
+// Special tokens:
 MATH_SIGN: '$';
 LEFT_CURLY: '{';
 RIGHT_CURLY: '}';
 LEFT_SQUARE: '[';
 RIGHT_SQUARE: ']';
 
+// Header commands:
 TITLE: BACK_SLASH 'title';
 AUTHOR: BACK_SLASH 'author';
 USEPACKAGE: BACK_SLASH 'usepackage';
 DOCUMENTCLASS: BACK_SLASH 'documentclass';
 
+// Begin/end commands and their options ("itemize" and "document"):
 ITEMIZE: 'itemize';
 DOCUMENT: 'document';
 END: BACK_SLASH 'end';
 BEGIN: BACK_SLASH 'begin';
 
+// Document commands:
 ITEM: BACK_SLASH 'item';
 BOLD: BACK_SLASH 'textbf';
 ITALIC: BACK_SLASH 'textit';
 MAKETITLE: BACK_SLASH 'maketitle';
 IMAGE: BACK_SLASH 'includegraphics';
 
-WORD: (CHAR | DIGIT | SYMB)+;
-WHITESPACE: (' ' | '\t')+ {$channel = HIDDEN};
+// Word - anything except special tokens:
+WORD: (LETTER | DIGIT | SYMBOL)+;
+fragment LETTER: LOWER | UPPER;
+fragment LOWER: 'a'..'z';
+fragment UPPER: 'A'..'Z';
+fragment DIGIT: '0'..'9';
+fragment SYMBOL: '!'..'#' | '%'..'/' | ':'..'@' | '\\' | '^'..'`' | '|' | '~';
+fragment BACK_SLASH: '\\';
 
+// Ignore whitespaces:
+WHITESPACE: SPACE+ {$channel = HIDDEN};
+fragment SPACE: ' ' | '\t';
+
+// A blank line should add some spacing between the texts, so recognizing
+// two or more consecutive "new line" as a "paragraph". Single "new line"s
+// are just ignored:
 PARAGRAPH: NEW_LINE NEW_LINE+;
 SINGLE_NEW_LINE: NEW_LINE {$channel = HIDDEN};
-
-fragment DIGIT: '0'..'9';
-fragment CHAR: 'a'..'z' | 'A'..'Z';
-fragment SYMB: '-' | ',' | ':' | '.' | '^' | '+' | '=' | '_' | '\\' | '(' | ')';
 fragment NEW_LINE: '\r'? '\n';
-fragment BACK_SLASH: '\\';
