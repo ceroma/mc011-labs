@@ -42,6 +42,7 @@ header
   | title
   | usepackage
   | documentclass
+  | PARAGRAPH
   ;
 
 author
@@ -83,6 +84,7 @@ text returns [text]
   | ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
   | IMAGE LEFT_CURLY t=text RIGHT_CURLY {text = '<img src="' + t + '"/>'}
   | MATH_SIGN t=words MATH_SIGN {text = '\(' + t + '\)'}
+  | PARAGRAPH {text = "\n<br>\n"}
   | t=words {text = t}
   ;
 
@@ -130,9 +132,13 @@ MAKETITLE: BACK_SLASH 'maketitle';
 IMAGE: BACK_SLASH 'includegraphics';
 
 WORD: (CHAR | DIGIT | SYMB)+;
-WHITESPACE: (' ' | '\t' | '\n')+ {$channel = HIDDEN};
+WHITESPACE: (' ' | '\t')+ {$channel = HIDDEN};
+
+PARAGRAPH: NEW_LINE NEW_LINE+;
+SINGLE_NEW_LINE: NEW_LINE {$channel = HIDDEN};
 
 fragment DIGIT: '0'..'9';
 fragment CHAR: 'a'..'z' | 'A'..'Z';
 fragment SYMB: '-' | ',' | ':' | '.' | '^' | '+' | '=' | '_' | '\\' | '(' | ')';
+fragment NEW_LINE: '\r'? '\n';
 fragment BACK_SLASH: '\\';
