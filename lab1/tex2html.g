@@ -81,11 +81,12 @@ document returns [body]
   ;
 
 // Content of the document can be a command, like "\maketitle" and
-// "\begin{itemize}", or plain text:
+// "\begin{itemize}", math text or plain text:
 content returns [content]
   : t=maketitle {content = t}
   | i=itemize {content = i}
   | i=image {content = i}
+  | m=math {content = m}
   | t=text {content = t}
   ;
 
@@ -119,12 +120,23 @@ image returns [img]
   : IMAGE LEFT_CURLY w=WORD RIGHT_CURLY {img = '<img src="' + $w.text + '"/>'}
   ;
 
+// Math text is surrounded by two "$" and accept brackets:
+math returns [text]
+@init {text = []}
+@after {text = '\(' + ' '.join(text) + '\)'}
+  : MATH_SIGN
+    (
+      w=(WORD | LEFT_CURLY | RIGHT_CURLY | LEFT_SQUARE | RIGHT_SQUARE)
+      {text.append($w.text)}
+    )+
+    MATH_SIGN
+  ;
+
 // Plain text and it's modifiers (bold and italic). Note that we could bold an
 // italic text, for example:
 text returns [text]
   : BOLD LEFT_CURLY t=text RIGHT_CURLY {text = '<b>' + t + '</b>'}
   | ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
-  | MATH_SIGN t=words MATH_SIGN {text = '\(' + t + '\)'}
   | PARAGRAPH {text = "\n<br>\n"}
   | t=words {text = t}
   ;
