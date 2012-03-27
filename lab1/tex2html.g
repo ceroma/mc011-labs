@@ -16,18 +16,21 @@ def main(argv, otherArg=None):
   tokens = CommonTokenStream(lexer)
   parser = tex2htmlParser(tokens)
 
-  # Find the absolute path of jsMath library:
-  src_path = os.path.dirname(os.path.realpath(__file__))
-  js_path = os.path.join(src_path, 'jsMath', 'easy', 'load.js')
+  # Configure MathJax JS library:
+  js_base = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js'
+  js_conf = '?config=TeX-AMS-MML_HTMLorMML'
+  js_path = js_base + js_conf
 
   title, body = parser.result()
+  print '<html>'
   print '<head>'
   print ' <title>' + title + '</title>'
-  print ' <script src="' + js_path + '"></script>'
+  print ' <script type="text/javascript" src="' + js_path + '"></script>'
   print '</head>'
   print '<body>'
   print body
   print '</body>'
+  print '</html>'
 }
 
 // Container for the title in "\title{...}":
@@ -121,7 +124,7 @@ image returns [img]
   ;
 
 // Math text is surrounded by two "$" and accept brackets (escaped or not). It
-// is rendered enclosed by "\(" and "\)", so it can be recognized by jsModule:
+// is rendered enclosed by "\(" and "\)", so it can be recognized by MathJax:
 math returns [text]
 @init {text = []}
 @after {text = '\(' + ' '.join(text) + '\)'}
