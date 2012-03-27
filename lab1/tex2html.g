@@ -120,13 +120,18 @@ image returns [img]
   : IMAGE LEFT_CURLY w=WORD RIGHT_CURLY {img = '<img src="' + $w.text + '"/>'}
   ;
 
-// Math text is surrounded by two "$" and accept brackets:
+// Math text is surrounded by two "$" and accept brackets (escaped or not). It
+// is rendered enclosed by "\(" and "\)", so it can be recognized by jsModule:
 math returns [text]
 @init {text = []}
 @after {text = '\(' + ' '.join(text) + '\)'}
   : MATH_SIGN
     (
-      w=(WORD | LEFT_CURLY | RIGHT_CURLY | LEFT_SQUARE | RIGHT_SQUARE)
+      w=(
+        WORD | ITEMIZE | DOCUMENT |
+        ESC_MATH_SIGN | ESC_LEFT_CURLY | ESC_RIGHT_CURLY |
+        LEFT_CURLY | RIGHT_CURLY | LEFT_SQUARE | RIGHT_SQUARE
+      )
       {text.append($w.text)}
     )+
     MATH_SIGN
@@ -141,11 +146,17 @@ text returns [text]
   | t=words {text = t}
   ;
 
-// Sequence of words, rendered separated by a space:
+// Sequence of words, rendered separated by a space. Also, a escaped "\$" should
+// be shown as "$". Other reserved words that appear in text area should also be
+// taken care of here (like "itemize" and "document"):
 words returns [words]
 @init {words = []}
 @after {words = ' '.join(words)}
-  : (w=WORD {words.append($w.text)})+
+  : ( w=ESC_MATH_SIGN {words.append('$')}
+    | w=ESC_LEFT_CURLY {words.append('{')}
+    | w=ESC_RIGHT_CURLY {words.append('}')}
+    | w=(WORD | ITEMIZE | DOCUMENT) {words.append($w.text)}
+    )+
   ;
 
 /*---------------------------------------------------------------------------*
@@ -158,6 +169,11 @@ LEFT_CURLY: '{';
 RIGHT_CURLY: '}';
 LEFT_SQUARE: '[';
 RIGHT_SQUARE: ']';
+
+// Escaped special tokens:
+ESC_MATH_SIGN: BACK_SLASH MATH_SIGN;
+ESC_LEFT_CURLY: BACK_SLASH LEFT_CURLY;
+ESC_RIGHT_CURLY: BACK_SLASH RIGHT_CURLY;
 
 // Header commands:
 TITLE: BACK_SLASH 'title';
