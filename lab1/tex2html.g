@@ -48,8 +48,8 @@ result returns [result]
 
 // Header definitions, currently ignore everything except the title:
 header
-  : author
-  | title
+  : title
+  | author
   | usepackage
   | documentclass
   | PARAGRAPH
@@ -63,7 +63,7 @@ title
 // These definitions are currently ignored, but are left as separate rules for
 // completeness:
 author
-  : AUTHOR LEFT_CURLY WORD+ RIGHT_CURLY
+  : AUTHOR LEFT_CURLY words RIGHT_CURLY
   ;
 
 usepackage
