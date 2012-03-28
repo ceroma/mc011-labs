@@ -142,23 +142,40 @@ math returns [text]
 // Plain text and it's modifiers (bold and italic). Note that we could bold an
 // italic text, for example:
 text returns [text]
-  : BOLD LEFT_CURLY t=text RIGHT_CURLY {text = '<b>' + t + '</b>'}
-  | ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
+@init {cont = []}
+  : b=bold {text = b}
+  | i=italic {text = i}
   | PARAGRAPH {text = "\n<br />\n"}
-  | t=words {text = t}
+  | w=word {text = w}
   ;
 
-// Sequence of words, rendered separated by a space. Also, a escaped "\$" should
-// be shown as "$". Other reserved words that appear in text area should also be
-// taken care of here (like "itemize" and "document"):
+// Everything inside "\textbf{..}" will be rendered inside "<b>..</b>":
+bold returns [bold]
+@init {texts = []}
+@after {bold = '<b>' + ' '.join(texts) + '</b>'}
+  : BOLD LEFT_CURLY (t=text {texts.append(t)})+ RIGHT_CURLY
+  ;
+
+// Everything inside "\textit{..}" will be rendered inside "<i>..</i>":
+italic returns [italic]
+@init {texts = []}
+@after {italic = '<i>' + ' '.join(texts) + '</i>'}
+  : ITALIC LEFT_CURLY (t=text {texts.append(t)})+ RIGHT_CURLY
+  ;
+  
+// Sequence of words, rendered separated by a space. Also, an escaped special
+// character, such as "\$", should be shown as "$":
 words returns [words]
 @init {words = []}
 @after {words = ' '.join(words)}
-  : ( w=ESC_MATH_SIGN {words.append('$')}
-    | w=ESC_LEFT_CURLY {words.append('{')}
-    | w=ESC_RIGHT_CURLY {words.append('}')}
-    | w=WORD {words.append($w.text)}
-    )+
+  : (w=word {words.append(w)})+
+  ;
+
+word returns [word]
+  : w=ESC_MATH_SIGN {word = '$'}
+  | w=ESC_LEFT_CURLY {word = '{'}
+  | w=ESC_RIGHT_CURLY {word = '}'}
+  | w=WORD {word = $w.text}
   ;
 
 /*---------------------------------------------------------------------------*
