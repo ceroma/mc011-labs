@@ -78,9 +78,9 @@ documentclass
 document returns [body]
 @init {body = []}
 @after {body = ' '.join(body)}
-  : BEGIN LEFT_CURLY DOCUMENT RIGHT_CURLY
+  : BEG_DOCUMENT
     (c=content {body.append(c)})*
-    END LEFT_CURLY DOCUMENT RIGHT_CURLY
+    END_DOCUMENT
   ;
 
 // Content of the document can be a command, like "\maketitle" and
@@ -101,9 +101,9 @@ maketitle returns [title]
 // "\begin{itemize}" expects a list of "\item"s:
 itemize returns [list]
 @init {list = ''}
-  : BEGIN LEFT_CURLY ITEMIZE RIGHT_CURLY {list += "<ul>\n"}
+  : BEG_ITEMIZE {list += "<ul>\n"}
     (i=item {list += i})*
-    END LEFT_CURLY ITEMIZE RIGHT_CURLY {list += "</ul>\n"}
+    END_ITEMIZE {list += "</ul>\n"}
   ;
 
 // Everything after a "\item" will be rendered inside "<li>..</li>" tags, and
@@ -131,9 +131,8 @@ math returns [text]
   : MATH_SIGN
     (
       w=(
-        WORD | ITEMIZE | DOCUMENT |
-        ESC_MATH_SIGN | ESC_LEFT_CURLY | ESC_RIGHT_CURLY |
-        LEFT_CURLY | RIGHT_CURLY | LEFT_SQUARE | RIGHT_SQUARE
+        WORD | ESC_MATH_SIGN | ESC_LEFT_CURLY | ESC_RIGHT_CURLY
+        | LEFT_CURLY | RIGHT_CURLY | LEFT_SQUARE | RIGHT_SQUARE
       )
       {text.append($w.text)}
     )+
@@ -158,7 +157,7 @@ words returns [words]
   : ( w=ESC_MATH_SIGN {words.append('$')}
     | w=ESC_LEFT_CURLY {words.append('{')}
     | w=ESC_RIGHT_CURLY {words.append('}')}
-    | w=(WORD | ITEMIZE | DOCUMENT) {words.append($w.text)}
+    | w=WORD {words.append($w.text)}
     )+
   ;
 
@@ -185,10 +184,14 @@ USEPACKAGE: BACK_SLASH 'usepackage';
 DOCUMENTCLASS: BACK_SLASH 'documentclass';
 
 // Begin/end commands and their options ("itemize" and "document"):
-ITEMIZE: 'itemize';
-DOCUMENT: 'document';
-END: BACK_SLASH 'end';
-BEGIN: BACK_SLASH 'begin';
+END_ITEMIZE: END SPACE* ITEMIZE;
+BEG_ITEMIZE: BEGIN SPACE* ITEMIZE;
+END_DOCUMENT: END SPACE* DOCUMENT;
+BEG_DOCUMENT: BEGIN SPACE* DOCUMENT;
+fragment ITEMIZE: '{itemize}';
+fragment DOCUMENT: '{document}';
+fragment END: BACK_SLASH 'end';
+fragment BEGIN: BACK_SLASH 'begin';
 
 // Document commands:
 ITEM: BACK_SLASH 'item';
