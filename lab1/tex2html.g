@@ -144,7 +144,7 @@ math returns [text]
 text returns [text]
   : BOLD LEFT_CURLY t=text RIGHT_CURLY {text = '<b>' + t + '</b>'}
   | ITALIC LEFT_CURLY t=text RIGHT_CURLY {text = '<i>' + t + '</i>'}
-  | PARAGRAPH {text = "\n<br>\n"}
+  | PARAGRAPH {text = "\n<br />\n"}
   | t=words {text = t}
   ;
 
