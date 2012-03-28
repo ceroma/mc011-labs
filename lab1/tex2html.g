@@ -149,14 +149,14 @@ text returns [text]
   | w=word {text = w}
   ;
 
-// Everything inside "\textbf{..}" will be rendered inside "<b>..</b>":
+// Everything in "\textbf{..}" will be rendered inside "<b>..</b>":
 bold returns [bold]
 @init {texts = []}
 @after {bold = '<b>' + ' '.join(texts) + '</b>'}
   : BOLD LEFT_CURLY (t=text {texts.append(t)})+ RIGHT_CURLY
   ;
 
-// Everything inside "\textit{..}" will be rendered inside "<i>..</i>":
+// Everything in "\textit{..}" will be rendered inside "<i>..</i>":
 italic returns [italic]
 @init {texts = []}
 @after {italic = '<i>' + ' '.join(texts) + '</i>'}
