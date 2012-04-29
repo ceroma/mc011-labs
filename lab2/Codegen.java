@@ -5,7 +5,6 @@ import util.List;
 import assem.Instr;
 import assem.MOVE;
 import assem.OPER;
-import frame.Frame;
 import temp.Temp;
 import tree.*;
 
@@ -37,6 +36,12 @@ public class Codegen {
      * @param s
      */
     void munchStm(Stm s) {
+        if (s instanceof EXPSTM) {
+            munchExp(((EXPSTM)s).getExpression());
+        } else if (s instanceof SEQ) {
+            munchStm(((SEQ)s).getLeft());
+            munchStm(((SEQ)s).getRight());
+        }
     	return;
     }
     
@@ -147,7 +152,7 @@ public class Codegen {
             case BINOP.PLUS:
                 inst = "add";
                 break;
-    		case BINOP.RSHIFT:
+            case BINOP.RSHIFT:
                 inst = "shr";
                 break;
             case BINOP.TIMES:
@@ -158,6 +163,7 @@ public class Codegen {
                 break;
         }
     	
+    	// TODO: larger tiles and logic operations.
         Temp r = new Temp();
         Temp left = munchExp(e.getLeft());
         Temp right = munchExp(e.getRight());
