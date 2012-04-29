@@ -15,7 +15,7 @@ public class Codegen {
     public Codegen(Frame f) {
         frame = f;
     }
-    
+
     /**
      * Adds an instruction to the end of the list of instructions.
      * 
@@ -44,7 +44,7 @@ public class Codegen {
         }
         return;
     }
-    
+
     /**
      * Emits instructions for a given Tree.Exp node using the Maximal Munch
      * algorithm. Returns the temporary register where the expression's result
@@ -97,7 +97,7 @@ public class Codegen {
         }
         return new Temp();
     }
-    
+
     /**
      * Emits instructions to move all the CALL arguments to their correct
      * positions.
@@ -109,7 +109,7 @@ public class Codegen {
         if (args == null) {
             return null;
         }
-        
+
         List<Temp> l = munchArgs(args.tail);
         Temp u = munchExp(args.head);
         emit(new OPER(
@@ -117,10 +117,10 @@ public class Codegen {
             new List<Temp>(frame.SP(), null),
             new List<Temp>(u, new List<Temp>(frame.SP(), null))
         ));
-        
+
         return new List<Temp>(u, l);
     }
-    
+
     /**
      * Emits instructions for a given Tree.Exp.BINOP.
      * 
@@ -129,7 +129,7 @@ public class Codegen {
      */
     Temp munchExpBinop(BINOP e) {
         String inst = "";
-        
+
         switch (e.getOperation()) {
             case BINOP.AND:
                 inst = "and";
@@ -162,7 +162,7 @@ public class Codegen {
                 inst = "xor";
                 break;
         }
-        
+
         // TODO: larger tiles and logic operations.
         Temp r = new Temp();
         Temp left = munchExp(e.getLeft());
@@ -174,10 +174,10 @@ public class Codegen {
             new List<Temp>(r, null),
             new List<Temp>(r, new List<Temp>(right, null))
         ));
-        
+
         return r;
     }
-    
+
     /**
      * Generates (selects) list of instructions for a given IR root node.
      * 
