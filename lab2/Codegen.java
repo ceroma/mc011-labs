@@ -9,11 +9,11 @@ import temp.Temp;
 import tree.*;
 
 public class Codegen {
-	Frame frame;
-	private List<Instr> ilist = null, last = null;
-	
+    Frame frame;
+    private List<Instr> ilist = null, last = null;
+    
     public Codegen(Frame f) {
-    	frame = f;
+        frame = f;
     }
     
     /**
@@ -22,11 +22,11 @@ public class Codegen {
      * @param inst
      */
     private void emit(Instr inst) {
-    	if (last != null) {
-    		last = last.tail = new List<Instr>(inst, null);
-    	} else {
-    		last = ilist = new List<Instr>(inst, null);
-    	}
+        if (last != null) {
+            last = last.tail = new List<Instr>(inst, null);
+        } else {
+            last = ilist = new List<Instr>(inst, null);
+        }
     }
 
     /**
@@ -42,7 +42,7 @@ public class Codegen {
             munchStm(((SEQ)s).getLeft());
             munchStm(((SEQ)s).getRight());
         }
-    	return;
+        return;
     }
     
     /**
@@ -53,49 +53,49 @@ public class Codegen {
      * @param s
      */
     Temp munchExp(Exp e) {
-    	if (e instanceof TEMP) {
-    		return ((TEMP)e).getTemp();
-    	} else if (e instanceof ESEQ) {
-    		munchStm(((ESEQ)e).getStatement());
-    		return munchExp(((ESEQ)e).getExpression());
-    	} else if (e instanceof NAME) {
-    		Temp r = new Temp();
-    		emit(new OPER(
-    	         "mov `d0, " + ((NAME)e).getLabel() + "\n",
-    	         new List<Temp>(r, null),
-    	         null
-    		));
-    		return r;
-    	} else if (e instanceof CONST) {
-    		Temp r = new Temp();
-    		emit(new OPER(
-    	         "mov `d0, " + ((CONST)e).getValue() + "\n",
-    	         new List<Temp>(r, null),
-    	         null
-    		));
-    		return r;
-    	} else if (e instanceof MEM) {
-    		Temp r = new Temp();
-    		Temp u = munchExp(((MEM)e).getExpression());
-    		emit(new OPER(
-       	         "mov `d0, [`u0]\n",
-       	         new List<Temp>(r, null),
-       	         new List<Temp>(u, null)
-       		));
-    		return r;
-    	} else if (e instanceof CALL) {
-    		Temp u = munchExp(((CALL)e).getCallable());
-    		List<Temp> l = munchArgs(((CALL)e).getArguments());
-    		emit(new OPER(
-                 "call `u0\n",
-          	     frame.calleeDefs(),
-          	     new List<Temp>(u, l)
-          	));
-    		return frame.RV();
-    	} else if (e instanceof BINOP) {
-    		return munchExpBinop((BINOP)e);
-    	}
-    	return new Temp();
+        if (e instanceof TEMP) {
+            return ((TEMP)e).getTemp();
+        } else if (e instanceof ESEQ) {
+            munchStm(((ESEQ)e).getStatement());
+            return munchExp(((ESEQ)e).getExpression());
+        } else if (e instanceof NAME) {
+            Temp r = new Temp();
+            emit(new OPER(
+                "mov `d0, " + ((NAME)e).getLabel() + "\n",
+                new List<Temp>(r, null),
+                null
+            ));
+            return r;
+        } else if (e instanceof CONST) {
+            Temp r = new Temp();
+            emit(new OPER(
+                "mov `d0, " + ((CONST)e).getValue() + "\n",
+                new List<Temp>(r, null),
+                null
+            ));
+            return r;
+        } else if (e instanceof MEM) {
+            Temp r = new Temp();
+            Temp u = munchExp(((MEM)e).getExpression());
+            emit(new OPER(
+                "mov `d0, [`u0]\n",
+                new List<Temp>(r, null),
+                new List<Temp>(u, null)
+            ));
+            return r;
+        } else if (e instanceof CALL) {
+            Temp u = munchExp(((CALL)e).getCallable());
+            List<Temp> l = munchArgs(((CALL)e).getArguments());
+            emit(new OPER(
+                "call `u0\n",
+                frame.calleeDefs(),
+                new List<Temp>(u, l)
+            ));
+            return frame.RV();
+        } else if (e instanceof BINOP) {
+            return munchExpBinop((BINOP)e);
+        }
+        return new Temp();
     }
     
     /**
@@ -106,19 +106,19 @@ public class Codegen {
      * @return
      */
     List<Temp> munchArgs(List<Exp> args) {
-    	if (args == null) {
-    		return null;
-    	}
-    	
-    	List<Temp> l = munchArgs(args.tail);
-    	Temp u = munchExp(args.head);
-		emit(new OPER(
-             "push `u0\n",
-             new List<Temp>(frame.SP(), null),
-       	     new List<Temp>(u, new List<Temp>(frame.SP(), null))
-       	));
-    	
-    	return new List<Temp>(u, l);
+        if (args == null) {
+            return null;
+        }
+        
+        List<Temp> l = munchArgs(args.tail);
+        Temp u = munchExp(args.head);
+        emit(new OPER(
+            "push `u0\n",
+            new List<Temp>(frame.SP(), null),
+            new List<Temp>(u, new List<Temp>(frame.SP(), null))
+        ));
+        
+        return new List<Temp>(u, l);
     }
     
     /**
@@ -129,7 +129,7 @@ public class Codegen {
      */
     Temp munchExpBinop(BINOP e) {
         String inst = "";
-    	
+        
         switch (e.getOperation()) {
             case BINOP.AND:
                 inst = "and";
@@ -162,8 +162,8 @@ public class Codegen {
                 inst = "xor";
                 break;
         }
-    	
-    	// TODO: larger tiles and logic operations.
+        
+        // TODO: larger tiles and logic operations.
         Temp r = new Temp();
         Temp left = munchExp(e.getLeft());
         Temp right = munchExp(e.getRight());
@@ -174,7 +174,7 @@ public class Codegen {
             new List<Temp>(r, null),
             new List<Temp>(r, new List<Temp>(right, null))
         ));
-		
+        
         return r;
     }
     
@@ -185,11 +185,11 @@ public class Codegen {
      * @return
      */
     public List<Instr> codegen(Stm s) {
-    	List<Instr> l;
-    	munchStm(s);
-    	l = ilist;
-    	ilist = last = null;
-    	return l;
+        List<Instr> l;
+        munchStm(s);
+        l = ilist;
+        ilist = last = null;
+        return l;
     }
 
     /**
@@ -198,10 +198,10 @@ public class Codegen {
      * @param body
      * @return
      */
-    public List<Instr> codegen(List<Stm> body) {    	
-    	for (Stm s : body) {
-    		munchStm(s);
-    	}
+    public List<Instr> codegen(List<Stm> body) {        
+        for (Stm s : body) {
+            munchStm(s);
+        }
         return ilist;
     }
 }
