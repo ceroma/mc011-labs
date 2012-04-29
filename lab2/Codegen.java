@@ -54,7 +54,7 @@ public class Codegen {
     	} else if (e instanceof NAME) {
     		Temp r = new Temp();
     		emit(new OPER(
-    	         "move `d0, " + ((NAME)e).getLabel() + "\n",
+    	         "mov `d0, " + ((NAME)e).getLabel() + "\n",
     	         new List<Temp>(r, null),
     	         null
     		));
@@ -62,7 +62,7 @@ public class Codegen {
     	} else if (e instanceof CONST) {
     		Temp r = new Temp();
     		emit(new OPER(
-    	         "move `d0, " + ((CONST)e).getValue() + "\n",
+    	         "mov `d0, " + ((CONST)e).getValue() + "\n",
     	         new List<Temp>(r, null),
     	         null
     		));
@@ -71,7 +71,7 @@ public class Codegen {
     		Temp r = new Temp();
     		Temp u = munchExp(((MEM)e).getExpression());
     		emit(new OPER(
-       	         "move `d0, [`u0]\n",
+       	         "mov `d0, [`u0]\n",
        	         new List<Temp>(r, null),
        	         new List<Temp>(u, null)
        		));
