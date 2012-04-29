@@ -43,13 +43,13 @@ public class Codegen {
             munchStm(((SEQ)s).getRight());
         } else if (s instanceof LABEL) {
             emit(new assem.LABEL(
-                ((LABEL)s).getLabel() + ":\n",
+                ((LABEL)s).getLabel() + ":",
                 ((LABEL)s).getLabel()
             ));
         } else if (s instanceof JUMP) {
             Temp u = munchExp(((JUMP)s).getExpression());
             emit(new OPER(
-                "jmp `u0\n",
+                "jmp `u0",
                 null,
                 new List<Temp>(u, null)
             ));
@@ -73,7 +73,7 @@ public class Codegen {
         } else if (e instanceof NAME) {
             Temp r = new Temp();
             emit(new OPER(
-                "mov `d0, " + ((NAME)e).getLabel() + "\n",
+                "mov `d0, " + ((NAME)e).getLabel(),
                 new List<Temp>(r, null),
                 null
             ));
@@ -81,7 +81,7 @@ public class Codegen {
         } else if (e instanceof CONST) {
             Temp r = new Temp();
             emit(new OPER(
-                "mov `d0, " + ((CONST)e).getValue() + "\n",
+                "mov `d0, " + ((CONST)e).getValue(),
                 new List<Temp>(r, null),
                 null
             ));
@@ -90,7 +90,7 @@ public class Codegen {
             Temp r = new Temp();
             Temp u = munchExp(((MEM)e).getExpression());
             emit(new OPER(
-                "mov `d0, [`u0]\n",
+                "mov `d0, [`u0]",
                 new List<Temp>(r, null),
                 new List<Temp>(u, null)
             ));
@@ -99,7 +99,7 @@ public class Codegen {
             Temp u = munchExp(((CALL)e).getCallable());
             List<Temp> l = munchArgs(((CALL)e).getArguments());
             emit(new OPER(
-                "call `u0\n",
+                "call `u0",
                 frame.calleeDefs(),
                 new List<Temp>(u, l)
             ));
@@ -125,7 +125,7 @@ public class Codegen {
         List<Temp> l = munchArgs(args.tail);
         Temp u = munchExp(args.head);
         emit(new OPER(
-            "push `u0\n",
+            "push `u0",
             new List<Temp>(frame.SP(), null),
             new List<Temp>(u, new List<Temp>(frame.SP(), null))
         ));
@@ -182,7 +182,7 @@ public class Codegen {
 
         emit(new MOVE(r, left));
         emit(new OPER(
-            inst + " `d0, `u1\n",
+            inst + " `d0, `u1",
             new List<Temp>(r, null),
             new List<Temp>(r, new List<Temp>(right, null))
         ));
