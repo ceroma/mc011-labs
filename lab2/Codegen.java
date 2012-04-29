@@ -67,6 +67,15 @@ public class Codegen {
     	         null
     		));
     		return r;
+    	} else if (e instanceof MEM) {
+    		Temp r = new Temp();
+    		Temp u = munchExp(((MEM)e).getExpression());
+    		emit(new OPER(
+       	         "move `d0, [`u0]\n",
+       	         new List<Temp>(r, null),
+       	         new List<Temp>(u, null)
+       		));
+    		return r;
     	}
     	return new Temp();
     }
