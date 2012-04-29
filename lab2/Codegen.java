@@ -41,6 +41,11 @@ public class Codegen {
         } else if (s instanceof SEQ) {
             munchStm(((SEQ)s).getLeft());
             munchStm(((SEQ)s).getRight());
+        } else if (s instanceof LABEL) {
+            emit(new assem.LABEL(
+                ((LABEL)s).getLabel() + ":\n",
+                ((LABEL)s).getLabel()
+            ));
         }
         return;
     }
