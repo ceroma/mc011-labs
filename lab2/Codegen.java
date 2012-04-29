@@ -5,6 +5,7 @@ import util.List;
 import assem.Instr;
 import assem.MOVE;
 import assem.OPER;
+import temp.Label;
 import temp.Temp;
 import tree.*;
 
@@ -48,12 +49,69 @@ public class Codegen {
             ));
         } else if (s instanceof JUMP) {
             Temp u = munchExp(((JUMP)s).getExpression());
+            // TODO: check assem.OPER(instruction, jumps).
             emit(new OPER(
                 "jmp `u0",
                 null,
                 new List<Temp>(u, null)
             ));
+        } else if (s instanceof CJUMP) {
+            munchConditionalJump((CJUMP)s);
         }
+        return;
+    }
+    
+    /**
+     * Emits instructions for a given Tree.Stm.CJUMP.
+     * 
+     * @param s
+     */
+    void munchConditionalJump(CJUMP s) {
+        String inst = "";
+
+        switch (s.getOperation()) {
+            case CJUMP.EQ:
+                inst = "jz";
+                break;
+            case CJUMP.NE:
+                inst = "jnz";
+                break;
+            case CJUMP.LT:
+                inst = "jl";
+                break;
+            case CJUMP.LE:
+                inst = "jle";
+                break;
+            case CJUMP.GT:
+                inst = "jg";
+                break;
+            case CJUMP.GE:
+                inst = "jge";
+                break;
+            case CJUMP.ULT:
+                inst = "jb";
+                break;
+            case CJUMP.ULE:
+                inst = "jbe";
+                break;
+            case CJUMP.UGT:
+                inst = "ja";
+                break;
+            case CJUMP.UGE:
+                inst = "jae";
+                break;
+        }
+
+        Temp left = munchExp(s.getLeft());
+        Temp right = munchExp(s.getRight());
+
+        emit(new OPER(
+            "cmp `u0, `u1",
+            null,
+            new List<Temp>(left, new List<Temp>(right, null))
+        ));
+        emit(new OPER(inst + " `j0", new List<Label>(s.getLabelTrue(), null)));
+        emit(new OPER("jmp `j0", new List<Label>(s.getLabelFalse(), null)));
         return;
     }
 
