@@ -15,6 +15,11 @@ public class Codegen {
     	frame = f;
     }
     
+    /**
+     * Adds an instruction to the end of the list of instructions.
+     * 
+     * @param inst
+     */
     private void emit(Instr inst) {
     	if (last != null) {
     		last = last.tail = new List<Instr>(inst, null);
@@ -23,14 +28,33 @@ public class Codegen {
     	}
     }
 
+    /**
+     * Emits instructions for a given Tree.Stm node using the Maximal Munch
+     * algorithm.
+     * 
+     * @param s
+     */
     void munchStm(Stm s) {
     	return;
     }
     
+    /**
+     * Emits instructions for a given Tree.Exp node using the Maximal Munch
+     * algorithm. Returns the temporary register where the expression's result
+     * is stored.
+     * 
+     * @param s
+     */
     Temp munchExp(Exp e) {
     	return new Temp();
     }
     
+    /**
+     * Generates (selects) list of instructions for a given IR root node.
+     * 
+     * @param s
+     * @return
+     */
     public List<Instr> codegen(Stm s) {
     	List<Instr> l;
     	munchStm(s);
@@ -39,6 +63,12 @@ public class Codegen {
     	return l;
     }
 
+    /**
+     * Generates (selects) list of instructions for a list of IR nodes.
+     * 
+     * @param body
+     * @return
+     */
     public List<Instr> codegen(List<Stm> body) {
         return null;
     }
