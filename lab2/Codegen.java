@@ -43,7 +43,7 @@ public class Codegen {
             munchStm(((SEQ)s).getRight());
         } else if (s instanceof LABEL) {
             emit(new assem.LABEL(
-                ((LABEL)s).getLabel() + ":",
+                ((LABEL)s).getLabel().toString() + ":",
                 ((LABEL)s).getLabel()
             ));
         } else if (s instanceof JUMP) {
@@ -73,7 +73,7 @@ public class Codegen {
         } else if (e instanceof NAME) {
             Temp r = new Temp();
             emit(new OPER(
-                "mov `d0, " + ((NAME)e).getLabel(),
+                "mov `d0, " + ((NAME)e).getLabel().toString(),
                 new List<Temp>(r, null),
                 null
             ));
