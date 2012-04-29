@@ -69,7 +69,10 @@ public class Codegen {
      * @param body
      * @return
      */
-    public List<Instr> codegen(List<Stm> body) {
-        return null;
+    public List<Instr> codegen(List<Stm> body) {    	
+    	for (Stm s : body) {
+    		munchStm(s);
+    	}
+        return ilist;
     }
 }
