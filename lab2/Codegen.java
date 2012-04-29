@@ -46,6 +46,13 @@ public class Codegen {
                 ((LABEL)s).getLabel() + ":\n",
                 ((LABEL)s).getLabel()
             ));
+        } else if (s instanceof JUMP) {
+            Temp u = munchExp(((JUMP)s).getExpression());
+            emit(new OPER(
+                "jmp `u0\n",
+                null,
+                new List<Temp>(u, null)
+            ));
         }
         return;
     }
