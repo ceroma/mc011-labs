@@ -3,6 +3,7 @@ package x86;
 import util.List;
 
 import assem.Instr;
+import assem.MOVE;
 import assem.OPER;
 import frame.Frame;
 import temp.Temp;
@@ -86,12 +87,15 @@ public class Codegen {
           	     new List<Temp>(u, l)
           	));
     		return frame.RV();
+    	} else if (e instanceof BINOP) {
+    		return munchExpBinop((BINOP)e);
     	}
     	return new Temp();
     }
     
     /**
-     * Emits instructions to move all the arguments to their correct positions.
+     * Emits instructions to move all the CALL arguments to their correct
+     * positions.
      * 
      * @param args
      * @return
@@ -110,6 +114,62 @@ public class Codegen {
        	));
     	
     	return new List<Temp>(u, l);
+    }
+    
+    /**
+     * Emits instructions for a given Tree.Exp.BINOP.
+     * 
+     * @param e
+     * @return
+     */
+    Temp munchExpBinop(BINOP e) {
+        String inst = "";
+    	
+        switch (e.getOperation()) {
+            case BINOP.AND:
+                inst = "and";
+                break;
+            case BINOP.ARSHIFT:
+                inst = "sar";
+                break;
+            case BINOP.DIV:
+                inst = "div";
+                break;
+            case BINOP.LSHIFT:
+                inst = "shl";
+                break;
+            case BINOP.MINUS:
+                inst = "sub";
+                break;
+            case BINOP.OR:
+                inst = "or";
+                break;
+            case BINOP.PLUS:
+                inst = "add";
+                break;
+    		case BINOP.RSHIFT:
+                inst = "shr";
+                break;
+            case BINOP.TIMES:
+                inst = "mul";
+                break;
+            case BINOP.XOR:
+                inst = "xor";
+                break;
+        }
+    	
+        Temp r = new Temp();
+        Temp left = munchExp(e.getLeft());
+        Temp right = munchExp(e.getRight());
+
+        emit(new MOVE(r, left));
+        emit(new OPER(
+            inst + " `d0, `u1\n",
+            new List<Temp>(r, null),
+            new List<Temp>(r, new List<Temp>(right, null))
+        ));
+		
+        return r;
     }
     
     /**
