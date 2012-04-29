@@ -4,6 +4,7 @@ import util.List;
 
 import assem.Instr;
 import assem.OPER;
+import frame.Frame;
 import temp.Temp;
 import tree.*;
 
@@ -76,8 +77,39 @@ public class Codegen {
        	         new List<Temp>(u, null)
        		));
     		return r;
+    	} else if (e instanceof CALL) {
+    		Temp u = munchExp(((CALL)e).getCallable());
+    		List<Temp> l = munchArgs(((CALL)e).getArguments());
+    		emit(new OPER(
+                 "call `u0\n",
+          	     frame.calleeDefs(),
+          	     new List<Temp>(u, l)
+          	));
+    		return frame.RV();
     	}
     	return new Temp();
+    }
+    
+    /**
+     * Emits instructions to move all the arguments to their correct positions.
+     * 
+     * @param args
+     * @return
+     */
+    List<Temp> munchArgs(List<Exp> args) {
+    	if (args == null) {
+    		return null;
+    	}
+    	
+    	List<Temp> l = munchArgs(args.tail);
+    	Temp u = munchExp(args.head);
+		emit(new OPER(
+             "push `u0\n",
+             new List<Temp>(frame.SP(), null),
+       	     new List<Temp>(u, new List<Temp>(frame.SP(), null))
+       	));
+    	
+    	return new List<Temp>(u, l);
     }
     
     /**
