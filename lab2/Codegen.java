@@ -2,10 +2,10 @@ package x86;
 
 import util.List;
 
-import tree.Exp;
-import tree.Stm;
-import temp.Temp;
 import assem.Instr;
+import assem.OPER;
+import temp.Temp;
+import tree.*;
 
 public class Codegen {
 	Frame frame;
@@ -46,6 +46,28 @@ public class Codegen {
      * @param s
      */
     Temp munchExp(Exp e) {
+    	if (e instanceof TEMP) {
+    		return ((TEMP)e).getTemp();
+    	} else if (e instanceof ESEQ) {
+    		munchStm(((ESEQ)e).getStatement());
+    		return munchExp(((ESEQ)e).getExpression());
+    	} else if (e instanceof NAME) {
+    		Temp r = new Temp();
+    		emit(new OPER(
+    	         "move `d0, " + ((NAME)e).getLabel() + "\n",
+    	         new List<Temp>(r, null),
+    	         null
+    		));
+    		return r;
+    	} else if (e instanceof CONST) {
+    		Temp r = new Temp();
+    		emit(new OPER(
+    	         "move `d0, " + ((CONST)e).getValue() + "\n",
+    	         new List<Temp>(r, null),
+    	         null
+    		));
+    		return r;
+    	}
     	return new Temp();
     }
     
