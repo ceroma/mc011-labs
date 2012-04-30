@@ -3,7 +3,6 @@ package x86;
 import util.List;
 
 import assem.Instr;
-import assem.MOVE;
 import assem.OPER;
 import temp.Label;
 import temp.Temp;
@@ -57,6 +56,10 @@ public class Codegen {
             ));
         } else if (s instanceof CJUMP) {
             munchConditionalJump((CJUMP)s);
+        } else if (s instanceof MOVE) {
+            Temp src = munchExp(((MOVE)s).getSource());
+            Temp dst = munchExp(((MOVE)s).getDestination());
+            emit(new assem.MOVE(dst, src));
         }
         return;
     }
@@ -252,7 +255,7 @@ public class Codegen {
         Temp left = munchExp(e.getLeft());
         Temp right = munchExp(e.getRight());
 
-        emit(new MOVE(r, left));
+        emit(new assem.MOVE(r, left));
         emit(new OPER(
             inst + " `d0, `u1",
             new List<Temp>(r, null),
