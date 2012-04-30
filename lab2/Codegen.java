@@ -49,7 +49,7 @@ public class Codegen {
         } else if (s instanceof MOVE) {
             munchStm((MOVE)s);
         } else {
-            System.out.println("Unrecognized Stm: " + s.getClass());
+            System.err.println("Unrecognized Stm: " + s.getClass());
         }
     }
 
@@ -167,62 +167,125 @@ public class Codegen {
      */
     Temp munchExp(Exp e) {
         if (e instanceof TEMP) {
-            return ((TEMP)e).getTemp();
+            return munchExp((TEMP)e);
         } else if (e instanceof ESEQ) {
-            munchStm(((ESEQ)e).getStatement());
-            return munchExp(((ESEQ)e).getExpression());
+            return munchExp((ESEQ)e);
         } else if (e instanceof NAME) {
-            Temp r = new Temp();
-            emit(new OPER(
-                "mov `d0, " + ((NAME)e).getLabel().toString(),
-                new List<Temp>(r, null),
-                null
-            ));
-            return r;
+            return munchExp((NAME)e);
         } else if (e instanceof CONST) {
-            Temp r = new Temp();
-            emit(new OPER(
-                "mov `d0, " + ((CONST)e).getValue(),
-                new List<Temp>(r, null),
-                null
-            ));
-            return r;
+            return munchExp((CONST)e);
         } else if (e instanceof MEM) {
-            Temp r = new Temp();
-            Temp u = munchExp(((MEM)e).getExpression());
-            emit(new OPER(
-                "mov `d0, [`u0]",
-                new List<Temp>(r, null),
-                new List<Temp>(u, null)
-            ));
-            return r;
+            return munchExp((MEM)e);
         } else if (e instanceof CALL) {
-            Temp u = munchExp(((CALL)e).getCallable());
-            List<Exp> args = ((CALL)e).getArguments();
-            List<Temp> l = munchArgs(args);
-
-            emit(new OPER(
-                "call `u0",
-                frame.calleeDefs(),
-                new List<Temp>(u, l)
-            ));
-
-            // Restore the stack:
-            if (args.size() > 0) {
-                emit(new OPER(
-                    "add `d0, " + (4 * args.size()),
-                    new List<Temp>(frame.SP(), null),
-                    new List<Temp>(frame.SP(), null)
-                ));
-            }
-
-            return frame.RV();
+            return munchExp((CALL)e);
         } else if (e instanceof BINOP) {
-            return munchExpBinop((BINOP)e);
+            return munchExp((BINOP)e);
+        } else {
+            System.err.println("Unrecognized Exp: " + e.getClass());
+            return new Temp();
         }
-        return new Temp();
     }
 
+    /**
+     * Returns the temporary register for a given Tree.Exp.TEMP.
+     * 
+     * @param t
+     * @return
+     */
+    Temp munchExp(TEMP t) {
+    	return t.getTemp();
+    }
+
+    /**
+     * Emits instructions and returns the temporary register for a given
+     * Tree.Exp.ESEQ.
+     * 
+     * @param e
+     * @return
+     */
+    Temp munchExp(ESEQ e) {
+        munchStm(e.getStatement());
+        return munchExp(e.getExpression());
+    }
+
+    /**
+     * Emits instructions and returns the temporary register for a given
+     * Tree.Exp.NAME.
+     * 
+     * @param n
+     * @return
+     */
+    Temp munchExp(NAME n) {
+        Temp r = new Temp();
+        emit(new OPER(
+            "mov `d0, " + n.getLabel().toString(),
+            new List<Temp>(r, null),
+            null
+        ));
+        return r;
+    }
+
+    /**
+     * Emits instructions and returns the temporary register for a given
+     * Tree.Exp.CONST.
+     * 
+     * @param c
+     * @return
+     */
+    Temp munchExp(CONST c) {
+        Temp r = new Temp();
+        emit(new OPER(
+            "mov `d0, " + c.getValue(),
+            new List<Temp>(r, null),
+            null
+        ));
+        return r;
+    }
+
+    /**
+     * Emits instructions and returns the temporary register for a given
+     * Tree.Exp.MEM.
+     * 
+     * @param m
+     * @return
+     */
+    Temp munchExp(MEM m) {
+        Temp r = new Temp();
+        Temp u = munchExp(m.getExpression());
+        emit(new OPER(
+            "mov `d0, [`u0]",
+            new List<Temp>(r, null),
+            new List<Temp>(u, null)
+        ));
+        return r;
+    }
+
+    /**
+     * Emits instructions and returns the temporary register for a given
+     * Tree.Exp.CALL.
+     * 
+     * @param c
+     * @return
+     */
+    Temp munchExp(CALL c) {
+        Temp u = munchExp(c.getCallable());
+        List<Exp> args = c.getArguments();
+        List<Temp> l = munchArgs(args);
+
+        emit(new OPER("call `u0", frame.calleeDefs(), new List<Temp>(u, l)));
+
+        // Restore the stack:
+        if (args.size() > 0) {
+            emit(new OPER(
+                "add `d0, " + (4 * args.size()),
+                new List<Temp>(frame.SP(), null),
+                new List<Temp>(frame.SP(), null)
+            ));
+        }
+
+        return frame.RV();
+    }
+        
     /**
      * Emits instructions to move all the CALL arguments to their correct
      * positions.
@@ -249,15 +312,16 @@ public class Codegen {
     }
 
     /**
-     * Emits instructions for a given Tree.Exp.BINOP.
+     * Emits instructions and returns the temporary register for a given
+     * Tree.Exp.BINOP.
      * 
-     * @param e
+     * @param b
      * @return
      */
-    Temp munchExpBinop(BINOP e) {
+    Temp munchExp(BINOP b) {
         String inst = "";
 
-        switch (e.getOperation()) {
+        switch (b.getOperation()) {
             case BINOP.AND:
                 inst = "and";
                 break;
@@ -292,8 +356,8 @@ public class Codegen {
 
         // TODO: larger tiles and logic operations.
         Temp r = new Temp();
-        Temp left = munchExp(e.getLeft());
-        Temp right = munchExp(e.getRight());
+        Temp left = munchExp(b.getLeft());
+        Temp right = munchExp(b.getRight());
 
         emit(new assem.MOVE(r, left));
         emit(new OPER(
