@@ -155,12 +155,24 @@ public class Codegen {
             return r;
         } else if (e instanceof CALL) {
             Temp u = munchExp(((CALL)e).getCallable());
-            List<Temp> l = munchArgs(((CALL)e).getArguments());
+            List<Exp> args = ((CALL)e).getArguments();
+            List<Temp> l = munchArgs(args);
+
             emit(new OPER(
                 "call `u0",
                 frame.calleeDefs(),
                 new List<Temp>(u, l)
             ));
+
+            // Restore the stack:
+            if (args.size() > 0) {
+                emit(new OPER(
+                    "add `d0, " + (4 * args.size()),
+                    new List<Temp>(frame.SP(), null),
+                    new List<Temp>(frame.SP(), null)
+                ));
+            }
+
             return frame.RV();
         } else if (e instanceof BINOP) {
             return munchExpBinop((BINOP)e);
@@ -180,7 +192,9 @@ public class Codegen {
             return null;
         }
 
+        // The parameters should be pushed in inverted order:
         List<Temp> l = munchArgs(args.tail);
+
         Temp u = munchExp(args.head);
         emit(new OPER(
             "push `u0",
