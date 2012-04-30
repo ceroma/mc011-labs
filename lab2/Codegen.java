@@ -37,42 +37,71 @@ public class Codegen {
      */
     void munchStm(Stm s) {
         if (s instanceof EXPSTM) {
-            munchExp(((EXPSTM)s).getExpression());
+            munchStm((EXPSTM)s);
         } else if (s instanceof SEQ) {
-            munchStm(((SEQ)s).getLeft());
-            munchStm(((SEQ)s).getRight());
+            munchStm((SEQ)s);
         } else if (s instanceof LABEL) {
-            emit(new assem.LABEL(
-                ((LABEL)s).getLabel().toString() + ":",
-                ((LABEL)s).getLabel()
-            ));
+            munchStm((LABEL)s);
         } else if (s instanceof JUMP) {
-            Temp u = munchExp(((JUMP)s).getExpression());
-            // TODO: check assem.OPER(instruction, jumps).
-            emit(new OPER(
-                "jmp `u0",
-                null,
-                new List<Temp>(u, null)
-            ));
+            munchStm((JUMP)s);
         } else if (s instanceof CJUMP) {
-            munchConditionalJump((CJUMP)s);
+            munchStm((CJUMP)s);
         } else if (s instanceof MOVE) {
-            Temp src = munchExp(((MOVE)s).getSource());
-            Temp dst = munchExp(((MOVE)s).getDestination());
-            emit(new assem.MOVE(dst, src));
+            munchStm((MOVE)s);
+        } else {
+            System.out.println("Unrecognized Stm: " + s.getClass());
         }
-        return;
     }
-    
+
+    /**
+     * Emits instructions for a given Tree.Stm.EXPSTM.
+     * 
+     * @param e
+     */
+    void munchStm(EXPSTM e) {
+        munchExp(e.getExpression());
+    }
+
+    /**
+     * Emits instructions for a given Tree.Stm.SEQ.
+     *     
+     * @param s
+     */
+    void munchStm(SEQ s) {
+        munchStm(s.getLeft());
+        munchStm(s.getRight());
+    }
+
+    /**
+     * Emits instructions for a given Tree.Stm.LABEL.
+     * 
+     * @param l
+     */
+    void munchStm(LABEL l) {
+        emit(new assem.LABEL(l.getLabel().toString() + ":", l.getLabel()));
+    }
+
+    /**
+     * Emits instructions for a given Tree.Stm.JUMP.
+     * 
+     * @param j
+     */
+    void munchStm(JUMP j) {
+        // TODO: larger tiles (like JUMP(NAME) or JUMP(TEMP)).
+        Temp u = munchExp(j.getExpression());
+        // TODO: check assem.OPER(instruction, jumps).
+        emit(new OPER("jmp `u0", null, new List<Temp>(u, null)));
+    }
+
     /**
      * Emits instructions for a given Tree.Stm.CJUMP.
      * 
-     * @param s
+     * @param c
      */
-    void munchConditionalJump(CJUMP s) {
+    void munchStm(CJUMP c) {
         String inst = "";
 
-        switch (s.getOperation()) {
+        switch (c.getOperation()) {
             case CJUMP.EQ:
                 inst = "jz";
                 break;
@@ -105,17 +134,28 @@ public class Codegen {
                 break;
         }
 
-        Temp left = munchExp(s.getLeft());
-        Temp right = munchExp(s.getRight());
+        Temp left = munchExp(c.getLeft());
+        Temp right = munchExp(c.getRight());
 
         emit(new OPER(
             "cmp `u0, `u1",
             null,
             new List<Temp>(left, new List<Temp>(right, null))
         ));
-        emit(new OPER(inst + " `j0", new List<Label>(s.getLabelTrue(), null)));
-        emit(new OPER("jmp `j0", new List<Label>(s.getLabelFalse(), null)));
+        emit(new OPER(inst + " `j0", new List<Label>(c.getLabelTrue(), null)));
+        emit(new OPER("jmp `j0", new List<Label>(c.getLabelFalse(), null)));
         return;
+    }
+
+    /**
+     * Emits instructions for a given Tree.Stm.MOVE.
+     * 
+     * @param m
+     */
+    void munchStm(MOVE m) {
+        Temp src = munchExp(m.getSource());
+        Temp dst = munchExp(m.getDestination());
+        emit(new assem.MOVE(dst, src));
     }
 
     /**
