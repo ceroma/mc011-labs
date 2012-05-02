@@ -370,26 +370,13 @@ public class Codegen {
     }
 
     /**
-     * Generates (selects) list of instructions for a given IR root node.
-     * 
-     * @param s
-     * @return
-     */
-    public List<Instr> codegen(Stm s) {
-        List<Instr> l;
-        munchStm(s);
-        l = ilist;
-        ilist = last = null;
-        return l;
-    }
-
-    /**
      * Generates (selects) list of instructions for a list of IR nodes.
      * 
      * @param body
      * @return
      */
-    public List<Instr> codegen(List<Stm> body) {        
+    public List<Instr> codegen(List<Stm> body) {
+        ilist = last = null;
         for (Stm s : body) {
             munchStm(s);
         }
