@@ -93,7 +93,7 @@ public class Codegen {
             Label l = ((NAME)e).getLabel();
             emit(new OPER("jmp `j0", new List<Label>(l, null)));
         } else {
-            Temp u = munchExp(j.getExpression());
+            Temp u = munchExp(e);
             emit(new OPER("jmp `u0", null, new List<Temp>(u, null)));
         }
     }
@@ -272,11 +272,19 @@ public class Codegen {
      * @return
      */
     Temp munchExp(CALL c) {
-        Temp u = munchExp(c.getCallable());
         List<Exp> args = c.getArguments();
         List<Temp> l = munchArgs(args);
 
-        emit(new OPER("call `u0", frame.calleeDefs(), new List<Temp>(u, l)));
+        String source = "";
+        if (c.getCallable() instanceof NAME) {
+            // CALL(NAME):
+            source = ((NAME)c.getCallable()).getLabel().toString();
+        } else {
+            source = "`u0";
+            Temp u = munchExp(c.getCallable());
+            l = new List<Temp>(u, l);
+        }
+        emit(new OPER("call " + source, frame.calleeDefs(), l));
 
         // Restore the stack:
         if (args.size() > 0) {
