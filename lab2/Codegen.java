@@ -273,18 +273,26 @@ public class Codegen {
      */
     Temp munchExp(CALL c) {
         List<Exp> args = c.getArguments();
-        List<Temp> l = munchArgs(args);
+        List<Temp> ulist = munchArgs(args);
 
         String source = "";
-        if (c.getCallable() instanceof NAME) {
+        Exp e = c.getCallable();
+        if (e instanceof NAME) {
             // CALL(NAME):
-            source = ((NAME)c.getCallable()).getLabel().toString();
+            source = ((NAME)e).getLabel().toString();
         } else {
-            source = "`u0";
-            Temp u = munchExp(c.getCallable());
-            l = new List<Temp>(u, l);
+            Temp u;
+            if (e instanceof MEM) {
+                // CALL(MEM):
+                source = "[`u0]";
+                u = munchExp(((MEM)e).getExpression());
+            } else {
+            	source = "`u0";
+                u = munchExp(e);
+            }
+            ulist = new List<Temp>(u, ulist);
         }
-        emit(new OPER("call " + source, frame.calleeDefs(), l));
+        emit(new OPER("call " + source, frame.calleeDefs(), ulist));
 
         // Restore the stack:
         if (args.size() > 0) {
