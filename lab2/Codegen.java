@@ -87,10 +87,19 @@ public class Codegen {
      * @param j
      */
     void munchStm(JUMP j) {
-        // TODO: larger tiles (like JUMP(NAME) or JUMP(TEMP)).
-        Temp u = munchExp(j.getExpression());
-        // TODO: check assem.OPER(instruction, jumps).
-        emit(new OPER("jmp `u0", null, new List<Temp>(u, null)));
+        Exp e = j.getExpression();
+        if (e instanceof NAME) {
+            // JUMP(NAME):
+            Label l = ((NAME)e).getLabel();
+            emit(new OPER("jmp `j0", new List<Label>(l, null)));
+        } else if (e instanceof TEMP) {
+            // JUMP(TEMP):
+            Temp u = ((TEMP)e).getTemp();
+            emit(new OPER("jmp `u0", null, new List<Temp>(u, null)));
+        } else {
+            Temp u = munchExp(j.getExpression());
+            emit(new OPER("jmp `u0", null, new List<Temp>(u, null)));
+        }
     }
 
     /**
