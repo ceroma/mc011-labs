@@ -92,10 +92,6 @@ public class Codegen {
             // JUMP(NAME):
             Label l = ((NAME)e).getLabel();
             emit(new OPER("jmp `j0", new List<Label>(l, null)));
-        } else if (e instanceof TEMP) {
-            // JUMP(TEMP):
-            Temp u = ((TEMP)e).getTemp();
-            emit(new OPER("jmp `u0", null, new List<Temp>(u, null)));
         } else {
             Temp u = munchExp(j.getExpression());
             emit(new OPER("jmp `u0", null, new List<Temp>(u, null)));
@@ -153,7 +149,6 @@ public class Codegen {
         ));
         emit(new OPER(inst + " `j0", new List<Label>(c.getLabelTrue(), null)));
         emit(new OPER("jmp `j0", new List<Label>(c.getLabelFalse(), null)));
-        return;
     }
 
     /**
