@@ -319,26 +319,36 @@ public class Codegen {
         }
 
         // The parameters should be pushed in inverted order:
-        List<Temp> l = munchArgs(args.tail);
+        List<Temp> rlist = munchArgs(args.tail);
 
-        // PUSH(CONST):
+        List<Temp> ulist;
+        String source = "";
         if (args.head instanceof CONST) {
-            emit(new OPER(
-                "push " + ((CONST)args.head).getValue(),
-                new List<Temp>(frame.SP(), null),
-                new List<Temp>(frame.SP(), null)
-            ));
-            return l;
+            // PUSH(CONST):
+        	source += ((CONST)args.head).getValue();
+        	ulist = new List<Temp>(frame.SP(), null);
+        } else {
+            Temp u;
+            if (args.head instanceof MEM) {
+                // PUSH(MEM):
+                source = "[`u0]";
+                u = munchExp(((MEM)args.head).getExpression());
+            } else {
+            	source = "`u0";
+            	u = munchExp(args.head);
+            }
+            rlist = new List<Temp>(u, rlist);
+            ulist = new List<Temp>(u, new List<Temp>(frame.SP(), null));
         }
         
         Temp u = munchExp(args.head);
         emit(new OPER(
-            "push `u0",
+            "push " + source,
             new List<Temp>(frame.SP(), null),
-            new List<Temp>(u, new List<Temp>(frame.SP(), null))
+            ulist
         ));
 
-        return new List<Temp>(u, l);
+        return rlist;
     }
 
     /**
