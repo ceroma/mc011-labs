@@ -437,10 +437,21 @@ public class Codegen {
 
         // TODO: larger tiles and logic operations.
         Temp r = new Temp();
-        Temp left = munchExp(b.getLeft());
-        Temp right = munchExp(b.getRight());
 
-        emit(new assem.MOVE(r, left));
+        // Left operand:
+        if (b.getLeft() instanceof CONST) {
+            // BINOP(OP, CONST, X):
+            emit(new OPER(
+                "mov `d0, " + ((CONST)b.getLeft()).getValue(),
+                new List<Temp>(r, null),
+                null 
+            ));
+        } else {
+            Temp left = munchExp(b.getLeft());
+            emit(new assem.MOVE(r, left));
+        }
+
+        Temp right = munchExp(b.getRight());        
         emit(new OPER(
             inst + " `d0, `u1",
             new List<Temp>(r, null),
