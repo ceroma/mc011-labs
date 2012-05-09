@@ -440,7 +440,7 @@ public class Codegen {
 
         // Left operand:
         if (b.getLeft() instanceof CONST) {
-            // BINOP(OP, CONST, X):
+            // BINOP(?, CONST, ?):
             emit(new OPER(
                 "mov `d0, " + ((CONST)b.getLeft()).getValue(),
                 new List<Temp>(r, null),
@@ -451,11 +451,21 @@ public class Codegen {
             emit(new assem.MOVE(r, left));
         }
 
-        Temp right = munchExp(b.getRight());        
+        // Right operand:
+        String operand = "";
+        List<Temp> ulist = new List<Temp>(r, null);
+        if (b.getRight() instanceof CONST) {
+            // BINOP(?, ?, CONST):
+            operand += ((CONST)b.getRight()).getValue();
+        } else {
+            operand = "`u0";
+            Temp right = munchExp(b.getRight());
+            ulist = new List<Temp>(right, ulist);
+        }
         emit(new OPER(
-            inst + " `d0, `u1",
+            inst + " `d0, " + operand,
             new List<Temp>(r, null),
-            new List<Temp>(r, new List<Temp>(right, null))
+            ulist
         ));
 
         return r;
