@@ -159,8 +159,9 @@ public class Codegen {
     void munchStm(MOVE m) {
         Exp src = m.getSource();
         Exp dst = m.getDestination();
+        
+        // MOVE(MEM, X):
         if (dst instanceof MEM) {
-            // MOVE(MEM, X):
             Temp tsrc = munchExp(src);
             Temp taddr = munchExp(((MEM)dst).getExpression());
             emit(new OPER(
@@ -168,9 +169,21 @@ public class Codegen {
                 null,
                 new List<Temp>(taddr, new List<Temp>(tsrc, null))
             ));
-        } else {
-            emit(new assem.MOVE(munchExp(dst), munchExp(src)));
+            return;
         }
+
+        // MOVE(X, CONST):
+        if (src instanceof CONST) {
+            Temp tdst = munchExp(dst);
+            emit(new OPER(
+                "mov `d0, " + ((CONST)src).getValue(),
+                new List<Temp>(tdst, null),
+                null
+            ));
+            return;
+        }
+        
+        emit(new assem.MOVE(munchExp(dst), munchExp(src)));
     }
 
     /**
