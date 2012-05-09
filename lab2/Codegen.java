@@ -370,17 +370,50 @@ public class Codegen {
      * @return
      */
     Temp munchExp(BINOP b) {
-        String inst = "";
+        // BINOP(TIMES, A, B):
+        if (b.getOperation() == BINOP.TIMES) {
+            Temp left = munchExp(b.getLeft());
+            Temp right = munchExp(b.getRight());
+            
+            // One operand should be in EAX:
+            emit(new assem.MOVE(frame.eax, left));
+            
+            // Higher part of result in EAX and lower part in EDX:
+            emit(new OPER(
+                "mul `u1",
+                new List<Temp>(frame.eax, new List<Temp>(frame.edx, null)),
+                new List<Temp>(frame.eax, new List<Temp>(right, null))
+            ));
+            return frame.eax;
+        }
 
+        // BINOP(DIV, A, B):
+        if (b.getOperation() == BINOP.DIV) {
+            Temp left = munchExp(b.getLeft());
+            Temp right = munchExp(b.getRight());
+            
+            // Dividend should be in EDX:EAX: 
+            emit(new assem.MOVE(frame.eax, left));
+            emit(new OPER("cdq"));
+
+            // Remainder in EDX and quotient in EAX:
+            List<Temp> list;
+            list = new List<Temp>(frame.eax, new List<Temp>(frame.edx, null));
+            emit(new OPER(
+                "div `u0",
+                list,
+                new List<Temp>(right, list)
+            ));
+            return frame.eax;
+        } 
+
+        String inst = "";
         switch (b.getOperation()) {
             case BINOP.AND:
                 inst = "and";
                 break;
             case BINOP.ARSHIFT:
                 inst = "sar";
-                break;
-            case BINOP.DIV:
-                inst = "div";
                 break;
             case BINOP.LSHIFT:
                 inst = "shl";
@@ -396,9 +429,6 @@ public class Codegen {
                 break;
             case BINOP.RSHIFT:
                 inst = "shr";
-                break;
-            case BINOP.TIMES:
-                inst = "mul";
                 break;
             case BINOP.XOR:
                 inst = "xor";
