@@ -352,7 +352,6 @@ public class Codegen {
             ulist = new List<Temp>(u, new List<Temp>(frame.SP(), null));
         }
         
-        Temp u = munchExp(args.head);
         emit(new OPER(
             "push " + source,
             new List<Temp>(frame.SP(), null),
