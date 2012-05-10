@@ -140,13 +140,22 @@ public class Codegen {
         }
 
         Temp left = munchExp(c.getLeft());
-        Temp right = munchExp(c.getRight());
 
-        emit(new OPER(
-            "cmp `u0, `u1",
-            null,
-            new List<Temp>(left, new List<Temp>(right, null))
-        ));
+        if (c.getRight() instanceof CONST) {
+            // CJUMP(OP, EXP, CONST):
+            emit(new OPER(
+                "cmp `u0, " + ((CONST)c.getRight()).getValue(),
+                null,
+                new List<Temp>(left, null)
+            ));           
+        } else {
+            Temp right = munchExp(c.getRight());
+            emit(new OPER(
+                "cmp `u0, `u1",
+                null,
+                new List<Temp>(left, new List<Temp>(right, null))
+            ));
+        }
         emit(new OPER(inst + " `j0", new List<Label>(c.getLabelTrue(), null)));
         emit(new OPER("jmp `j0", new List<Label>(c.getLabelFalse(), null)));
     }
