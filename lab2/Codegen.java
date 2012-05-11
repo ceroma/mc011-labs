@@ -161,8 +161,14 @@ public class Codegen {
                 new List<Temp>(left, new List<Temp>(right, null))
             ));
         }
-        emit(new OPER(inst + " `j0", new List<Label>(c.getLabelTrue(), null)));
-        emit(new OPER("jmp `j0", new List<Label>(c.getLabelFalse(), null)));
+
+        Label ltrue = c.getLabelTrue();        
+        Label lfalse = c.getLabelFalse();
+        emit(new OPER(
+            inst + " `j0",
+            new List<Label>(ltrue, new List<Label>(lfalse, null))
+        ));
+        emit(new OPER("jmp `j0", new List<Label>(lfalse, null)));
     }
 
     /**
