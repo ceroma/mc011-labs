@@ -94,7 +94,12 @@ public class Codegen {
             emit(new OPER("jmp `j0", new List<Label>(l, null)));
         } else {
             Temp u = munchExp(e);
-            emit(new OPER("jmp `u0", null, new List<Temp>(u, null)));
+            emit(new OPER(
+                "jmp `u0",
+                null,
+                new List<Temp>(u, null),
+                j.getTargets()
+            ));
         }
     }
 
