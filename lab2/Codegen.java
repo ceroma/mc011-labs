@@ -299,7 +299,55 @@ public class Codegen {
      */
     Temp munchExp(MEM m) {
         Temp r = new Temp();
-        Temp u = munchExp(m.getExpression());
+        Exp e = m.getExpression();
+        
+        // MEM(BINOP(-, TEMP, CONST)):
+        if (e instanceof BINOP &&
+            ((BINOP)e).getOperation() == BINOP.MINUS &&
+            ((BINOP)e).getLeft() instanceof TEMP &&
+            ((BINOP)e).getRight() instanceof CONST) {
+            Temp u = munchExp(((BINOP)e).getLeft());
+            long c = ((CONST)((BINOP)e).getRight()).getValue();
+            emit(new OPER(
+                "mov `d0, [`u0" + ((c != 0) ? ("-" + c) : "") + "]",
+                new List<Temp>(r, null),
+                new List<Temp>(u, null)
+            ));
+            return r;
+        }
+        
+        // MEM(BINOP(+, TEMP, CONST)):
+        if (e instanceof BINOP &&
+            ((BINOP)e).getOperation() == BINOP.PLUS &&
+            ((BINOP)e).getLeft() instanceof TEMP &&
+            ((BINOP)e).getRight() instanceof CONST) {
+            Temp u = munchExp(((BINOP)e).getLeft());
+            long c = ((CONST)((BINOP)e).getRight()).getValue();
+            emit(new OPER(
+                "mov `d0, [`u0" + ((c != 0) ? ("+" + c) : "") + "]",
+                new List<Temp>(r, null),
+                new List<Temp>(u, null)
+            ));
+            return r;
+        }
+        
+        // MEM(BINOP(+, CONST, TEMP)):
+        if (e instanceof BINOP &&
+            ((BINOP)e).getOperation() == BINOP.PLUS &&
+            ((BINOP)e).getLeft() instanceof CONST &&
+            ((BINOP)e).getRight() instanceof TEMP) {
+            Temp u = munchExp(((BINOP)e).getRight());
+            long c = ((CONST)((BINOP)e).getLeft()).getValue();
+            emit(new OPER(
+                "mov `d0, [`u0" + ((c != 0) ? ("+" + c) : "") + "]",
+                new List<Temp>(r, null),
+                new List<Temp>(u, null)
+            ));
+            return r;
+        }
+
+        // TODO: try MEM(BINOP(x, TEMP, TEMP))
+        Temp u = munchExp(e);
         emit(new OPER(
             "mov `d0, [`u0]",
             new List<Temp>(r, null),
