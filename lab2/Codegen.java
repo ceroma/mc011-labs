@@ -372,15 +372,8 @@ public class Codegen {
         	source += ((CONST)args.head).getValue();
         	ulist = new List<Temp>(frame.SP(), null);
         } else {
-            Temp u;
-            if (args.head instanceof MEM) {
-                // PUSH(MEM):
-                source = "[`u0]";
-                u = munchExp(((MEM)args.head).getExpression());
-            } else {
-            	source = "`u0";
-            	u = munchExp(args.head);
-            }
+        	source = "`u0";
+            Temp u = munchExp(args.head);
             rlist = new List<Temp>(u, rlist);
             ulist = new List<Temp>(u, new List<Temp>(frame.SP(), null));
         }
