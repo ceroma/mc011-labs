@@ -11,14 +11,14 @@ import tree.*;
 public class Codegen {
     Frame frame;
     private List<Instr> ilist = null, last = null;
-    
+
     public Codegen(Frame f) {
         frame = f;
     }
 
     /**
      * Adds an instruction to the end of the list of instructions.
-     * 
+     *
      * @param inst
      */
     private void emit(Instr inst) {
@@ -32,7 +32,7 @@ public class Codegen {
     /**
      * Emits instructions for a given Tree.Stm node using the Maximal Munch
      * algorithm.
-     * 
+     *
      * @param s
      */
     void munchStm(Stm s) {
@@ -55,7 +55,7 @@ public class Codegen {
 
     /**
      * Emits instructions for a given Tree.Stm.EXPSTM.
-     * 
+     *
      * @param e
      */
     void munchStm(EXPSTM e) {
@@ -64,7 +64,7 @@ public class Codegen {
 
     /**
      * Emits instructions for a given Tree.Stm.SEQ.
-     *     
+     *
      * @param s
      */
     void munchStm(SEQ s) {
@@ -74,7 +74,7 @@ public class Codegen {
 
     /**
      * Emits instructions for a given Tree.Stm.LABEL.
-     * 
+     *
      * @param l
      */
     void munchStm(LABEL l) {
@@ -83,7 +83,7 @@ public class Codegen {
 
     /**
      * Emits instructions for a given Tree.Stm.JUMP.
-     * 
+     *
      * @param j
      */
     void munchStm(JUMP j) {
@@ -105,7 +105,7 @@ public class Codegen {
 
     /**
      * Emits instructions for a given Tree.Stm.CJUMP.
-     * 
+     *
      * @param c
      */
     void munchStm(CJUMP c) {
@@ -152,7 +152,7 @@ public class Codegen {
                 "cmp `u0, " + ((CONST)c.getRight()).getValue(),
                 null,
                 new List<Temp>(left, null)
-            ));           
+            ));
         } else {
             Temp right = munchExp(c.getRight());
             emit(new OPER(
@@ -162,7 +162,7 @@ public class Codegen {
             ));
         }
 
-        Label ltrue = c.getLabelTrue();        
+        Label ltrue = c.getLabelTrue();
         Label lfalse = c.getLabelFalse();
         emit(new OPER(
             inst + " `j0",
@@ -173,13 +173,13 @@ public class Codegen {
 
     /**
      * Emits instructions for a given Tree.Stm.MOVE.
-     * 
+     *
      * @param m
      */
     void munchStm(MOVE m) {
         Exp src = m.getSource();
         Exp dst = m.getDestination();
-        
+
         // MOVE(MEM, X):
         if (dst instanceof MEM) {
             Temp tsrc = munchExp(src);
@@ -202,7 +202,7 @@ public class Codegen {
             ));
             return;
         }
-        
+
         emit(new assem.MOVE(munchExp(dst), munchExp(src)));
     }
 
@@ -210,7 +210,7 @@ public class Codegen {
      * Emits instructions for a given Tree.Exp node using the Maximal Munch
      * algorithm. Returns the temporary register where the expression's result
      * is stored.
-     * 
+     *
      * @param s
      */
     Temp munchExp(Exp e) {
@@ -236,7 +236,7 @@ public class Codegen {
 
     /**
      * Returns the temporary register for a given Tree.Exp.TEMP.
-     * 
+     *
      * @param t
      * @return
      */
@@ -247,7 +247,7 @@ public class Codegen {
     /**
      * Emits instructions and returns the temporary register for a given
      * Tree.Exp.ESEQ.
-     * 
+     *
      * @param e
      * @return
      */
@@ -259,7 +259,7 @@ public class Codegen {
     /**
      * Emits instructions and returns the temporary register for a given
      * Tree.Exp.NAME.
-     * 
+     *
      * @param n
      * @return
      */
@@ -276,7 +276,7 @@ public class Codegen {
     /**
      * Emits instructions and returns the temporary register for a given
      * Tree.Exp.CONST.
-     * 
+     *
      * @param c
      * @return
      */
@@ -293,14 +293,14 @@ public class Codegen {
     /**
      * Emits instructions and returns the temporary register for a given
      * Tree.Exp.MEM.
-     * 
+     *
      * @param m
      * @return
      */
     Temp munchExp(MEM m) {
         Temp r = new Temp();
         Exp e = m.getExpression();
-        
+
         // MEM(BINOP(-, TEMP, CONST)):
         if (e instanceof BINOP &&
             ((BINOP)e).getOperation() == BINOP.MINUS &&
@@ -315,7 +315,7 @@ public class Codegen {
             ));
             return r;
         }
-        
+
         // MEM(BINOP(+, TEMP, CONST)):
         if (e instanceof BINOP &&
             ((BINOP)e).getOperation() == BINOP.PLUS &&
@@ -330,7 +330,7 @@ public class Codegen {
             ));
             return r;
         }
-        
+
         // MEM(BINOP(+, CONST, TEMP)):
         if (e instanceof BINOP &&
             ((BINOP)e).getOperation() == BINOP.PLUS &&
@@ -359,7 +359,7 @@ public class Codegen {
     /**
      * Emits instructions and returns the temporary register for a given
      * Tree.Exp.CALL.
-     * 
+     *
      * @param c
      * @return
      */
@@ -397,11 +397,11 @@ public class Codegen {
 
         return frame.RV();
     }
-        
+
     /**
      * Emits instructions to move all the CALL arguments to their correct
      * positions.
-     * 
+     *
      * @param args
      * @return
      */
@@ -425,7 +425,7 @@ public class Codegen {
             rlist = new List<Temp>(u, rlist);
             ulist = new List<Temp>(u, new List<Temp>(frame.SP(), null));
         }
-        
+
         emit(new OPER(
             "push " + source,
             new List<Temp>(frame.SP(), null),
@@ -438,7 +438,7 @@ public class Codegen {
     /**
      * Emits instructions and returns the temporary register for a given
      * Tree.Exp.BINOP.
-     * 
+     *
      * @param b
      * @return
      */
@@ -447,10 +447,10 @@ public class Codegen {
         if (b.getOperation() == BINOP.TIMES) {
             Temp left = munchExp(b.getLeft());
             Temp right = munchExp(b.getRight());
-            
+
             // One operand should be in EAX:
             emit(new assem.MOVE(frame.eax, left));
-            
+
             // Higher part of result in EAX and lower part in EDX:
             emit(new OPER(
                 "mul `u1",
@@ -464,8 +464,8 @@ public class Codegen {
         if (b.getOperation() == BINOP.DIV) {
             Temp left = munchExp(b.getLeft());
             Temp right = munchExp(b.getRight());
-            
-            // Dividend should be in EDX:EAX: 
+
+            // Dividend should be in EDX:EAX:
             emit(new assem.MOVE(frame.eax, left));
             emit(new OPER("cdq"));
 
@@ -478,7 +478,7 @@ public class Codegen {
                 new List<Temp>(right, list)
             ));
             return frame.eax;
-        } 
+        }
 
         String inst = "";
         switch (b.getOperation()) {
@@ -517,7 +517,7 @@ public class Codegen {
             emit(new OPER(
                 "mov `d0, " + ((CONST)b.getLeft()).getValue(),
                 new List<Temp>(r, null),
-                null 
+                null
             ));
         } else {
             Temp left = munchExp(b.getLeft());
@@ -546,7 +546,7 @@ public class Codegen {
 
     /**
      * Generates (selects) list of instructions for a list of IR nodes.
-     * 
+     *
      * @param body
      * @return
      */
