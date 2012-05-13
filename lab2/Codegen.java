@@ -225,23 +225,15 @@ public class Codegen {
         }
 
         if (c.getLeft() instanceof MEM) {
+            // CJUMP(OP, MEM, EXP):
             Temp u0 = this.getMemAddressTemp((MEM)c.getLeft());
             String cmp0 = this.getMemAddressString((MEM)c.getLeft(), "0");
-            
-            String cmp1 = "";
-            List <Temp> ulist;
-            if (c.getRight() instanceof CONST) {
-                // CJUMP(OP, MEM, CONST):
-                cmp1 += ((CONST)c.getRight()).getValue();
-                ulist = new List<Temp>(u0, null);
-            } else {
-                // CJUMP(OP, MEM, EXP):
-                cmp1 += "`u1";
-                Temp u1 = munchExp(c.getRight());
-                ulist = new List<Temp>(u0, new List<Temp>(u1, null));
-            }
-            
-            emit(new OPER("cmp " + cmp0 + ", " + cmp1, null, ulist));            
+            Temp u1 = munchExp(c.getRight());             
+            emit(new OPER(
+                "cmp " + cmp0 + ", `u1",
+                null,
+                new List<Temp>(u0, new List<Temp>(u1, null))
+            ));            
         } else {
             Temp u0 = munchExp(c.getLeft());
 
@@ -515,6 +507,8 @@ public class Codegen {
                 new List<Temp>(frame.eax, new List<Temp>(frame.edx, null)),
                 new List<Temp>(frame.eax, new List<Temp>(right, null))
             ));
+
+            // TODO: move this to a Temp.
             return frame.eax;
         }
 
@@ -535,6 +529,8 @@ public class Codegen {
                 list,
                 new List<Temp>(right, list)
             ));
+
+            // TODO: move this to a Temp.
             return frame.eax;
         }
 
