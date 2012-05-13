@@ -191,12 +191,14 @@ public class Codegen {
             }
         }
 
+        Label next = new Label();
         Label ltrue = c.getLabelTrue();
         Label lfalse = c.getLabelFalse();
         emit(new OPER(
             inst + " `j0",
-            new List<Label>(ltrue, new List<Label>(lfalse, null))
+            new List<Label>(ltrue, new List<Label>(next, null))
         ));
+        emit(new assem.LABEL(next.toString() + ":", next));
         emit(new OPER("jmp `j0", new List<Label>(lfalse, null)));
     }
 
