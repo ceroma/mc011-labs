@@ -144,22 +144,51 @@ public class Codegen {
                 break;
         }
 
-        Temp left = munchExp(c.getLeft());
-
-        if (c.getRight() instanceof CONST) {
-            // CJUMP(OP, EXP, CONST):
-            emit(new OPER(
-                "cmp `u0, " + ((CONST)c.getRight()).getValue(),
-                null,
-                new List<Temp>(left, null)
-            ));
+        if (c.getLeft() instanceof MEM) {
+            Temp addr = munchExp(((MEM)c.getLeft()).getExpression());
+        	
+            if (c.getRight() instanceof CONST) {
+                // CJUMP(OP, MEM, CONST):
+                emit(new OPER(
+                    "cmp [`u0], " + ((CONST)c.getRight()).getValue(),
+                    null,
+                    new List<Temp>(addr, null)
+                ));
+            } else {
+                // CJUMP(OP, MEM, EXP):
+                Temp right = munchExp(c.getRight());
+                emit(new OPER(
+                    "cmp [`u0], `u1",
+                    null,
+                    new List<Temp>(addr, new List<Temp>(right, null))
+                ));
+            }            
         } else {
-            Temp right = munchExp(c.getRight());
-            emit(new OPER(
-                "cmp `u0, `u1",
-                null,
-                new List<Temp>(left, new List<Temp>(right, null))
-            ));
+            Temp left = munchExp(c.getLeft());
+
+            if (c.getRight() instanceof CONST) {
+                // CJUMP(OP, EXP, CONST):
+                emit(new OPER(
+                    "cmp `u0, " + ((CONST)c.getRight()).getValue(),
+                    null,
+                    new List<Temp>(left, null)
+                ));
+            } else if (c.getRight() instanceof MEM) {
+                // CJUMP(OP, EXP, MEM):
+                Temp addr = munchExp(((MEM)c.getRight()).getExpression());
+                emit(new OPER(
+                    "cmp `u0, [`u1]",
+                    null,
+                    new List<Temp>(left, new List<Temp>(addr, null))
+                ));
+            } else {
+                Temp right = munchExp(c.getRight());
+                emit(new OPER(
+                    "cmp `u0, `u1",
+                    null,
+                    new List<Temp>(left, new List<Temp>(right, null))
+                ));
+            }
         }
 
         Label ltrue = c.getLabelTrue();
@@ -365,6 +394,7 @@ public class Codegen {
      */
     Temp munchExp(CALL c) {
         List<Exp> args = c.getArguments();
+        // TODO: evaluate arguments after function's expression.
         List<Temp> ulist = munchArgs(args);
 
         String source = "";
