@@ -35,9 +35,10 @@ public class Codegen {
      * [reg], [reg+const] and [reg-const].
      * 
      * @param m
+     * @param idx Base index for the first register in the string (`u<idx>).
      * @return
      */
-    private String getMemAddressString(MEM m) {
+    private String getMemAddressString(MEM m, String idx) {
         // TODO: try [reg0+reg1] and [`u0+4*`u1] tiles.
         Exp e = m.getExpression();
         
@@ -47,7 +48,7 @@ public class Codegen {
             ((BINOP)e).getLeft() instanceof TEMP &&
             ((BINOP)e).getRight() instanceof CONST) {
             long c = ((CONST)((BINOP)e).getRight()).getValue();
-            return "[`u0" + ((c != 0) ? ("-" + c) : "") + "]";
+            return "[`u" + idx + ((c != 0) ? ("-" + c) : "") + "]";
         }
 
         // MEM(BINOP(+, TEMP, CONST)):
@@ -56,7 +57,7 @@ public class Codegen {
             ((BINOP)e).getLeft() instanceof TEMP &&
             ((BINOP)e).getRight() instanceof CONST) {
             long c = ((CONST)((BINOP)e).getRight()).getValue();
-            return "[`u0" + ((c != 0) ? ("+" + c) : "") + "]";
+            return "[`u" + idx + ((c != 0) ? ("+" + c) : "") + "]";
         }
 
         // MEM(BINOP(+, CONST, TEMP)):
@@ -65,10 +66,10 @@ public class Codegen {
             ((BINOP)e).getLeft() instanceof CONST &&
             ((BINOP)e).getRight() instanceof TEMP) {
             long c = ((CONST)((BINOP)e).getLeft()).getValue();
-            return "[`u0" + ((c != 0) ? ("+" + c) : "") + "]";
+            return "[`u" + idx + ((c != 0) ? ("+" + c) : "") + "]";
         }
         
-        return "[`u0]";
+        return "[`u" + idx + "]";
     }
 
     /**
@@ -225,7 +226,7 @@ public class Codegen {
 
         if (c.getLeft() instanceof MEM) {
             Temp u0 = this.getMemAddressTemp((MEM)c.getLeft());
-            String cmp0 = this.getMemAddressString((MEM)c.getLeft());
+            String cmp0 = this.getMemAddressString((MEM)c.getLeft(), "0");
             
             String cmp1 = "";
             List <Temp> ulist;
@@ -242,31 +243,26 @@ public class Codegen {
             
             emit(new OPER("cmp " + cmp0 + ", " + cmp1, null, ulist));            
         } else {
-            Temp left = munchExp(c.getLeft());
+            Temp u0 = munchExp(c.getLeft());
 
+            String cmp1 = "";
+            List <Temp> ulist;
             if (c.getRight() instanceof CONST) {
                 // CJUMP(OP, EXP, CONST):
-                emit(new OPER(
-                    "cmp `u0, " + ((CONST)c.getRight()).getValue(),
-                    null,
-                    new List<Temp>(left, null)
-                ));
+                cmp1 += ((CONST)c.getRight()).getValue();
+                ulist = new List<Temp>(u0, null);
             } else if (c.getRight() instanceof MEM) {
                 // CJUMP(OP, EXP, MEM):
-                Temp addr = munchExp(((MEM)c.getRight()).getExpression());
-                emit(new OPER(
-                    "cmp `u0, [`u1]",
-                    null,
-                    new List<Temp>(left, new List<Temp>(addr, null))
-                ));
+                cmp1 = this.getMemAddressString((MEM)c.getRight(), "1");
+                Temp u1 = this.getMemAddressTemp((MEM)c.getRight());
+                ulist = new List<Temp>(u0, new List<Temp>(u1, null));
             } else {
-                Temp right = munchExp(c.getRight());
-                emit(new OPER(
-                    "cmp `u0, `u1",
-                    null,
-                    new List<Temp>(left, new List<Temp>(right, null))
-                ));
+                cmp1 = "`u1";
+                Temp u1 = munchExp(c.getRight());
+                ulist = new List<Temp>(u0, new List<Temp>(u1, null));
             }
+            
+            emit(new OPER("cmp `u0, " + cmp1, null, ulist));
         }
 
         Label next = new Label();
@@ -409,7 +405,7 @@ public class Codegen {
     Temp munchExp(MEM m) {
         Temp r = new Temp();
         emit(new OPER(
-            "mov `d0, " + this.getMemAddressString(m),
+            "mov `d0, " + this.getMemAddressString(m, "0"),
             new List<Temp>(r, null),
             new List<Temp>(this.getMemAddressTemp(m), null)
         ));
@@ -437,6 +433,7 @@ public class Codegen {
             Temp u;
             if (e instanceof MEM) {
                 // CALL(MEM):
+                // TODO: use getMemAddress* once we treat [reg+4*reg].
                 source = "[`u0]";
                 u = munchExp(((MEM)e).getExpression());
             } else {
