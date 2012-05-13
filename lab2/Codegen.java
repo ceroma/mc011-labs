@@ -389,7 +389,7 @@ public class Codegen {
         // Restore the stack:
         if (args.size() > 0) {
             emit(new OPER(
-                "add `d0, " + (4 * args.size()),
+                "add `d0, " + (frame.wordsize() * args.size()),
                 new List<Temp>(frame.SP(), null),
                 new List<Temp>(frame.SP(), null)
             ));
