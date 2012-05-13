@@ -224,24 +224,23 @@ public class Codegen {
         }
 
         if (c.getLeft() instanceof MEM) {
-            Temp addr = munchExp(((MEM)c.getLeft()).getExpression());
-        	
+            Temp u0 = this.getMemAddressTemp((MEM)c.getLeft());
+            String cmp0 = this.getMemAddressString((MEM)c.getLeft());
+            
+            String cmp1 = "";
+            List <Temp> ulist;
             if (c.getRight() instanceof CONST) {
                 // CJUMP(OP, MEM, CONST):
-                emit(new OPER(
-                    "cmp [`u0], " + ((CONST)c.getRight()).getValue(),
-                    null,
-                    new List<Temp>(addr, null)
-                ));
+                cmp1 += ((CONST)c.getRight()).getValue();
+                ulist = new List<Temp>(u0, null);
             } else {
                 // CJUMP(OP, MEM, EXP):
-                Temp right = munchExp(c.getRight());
-                emit(new OPER(
-                    "cmp [`u0], `u1",
-                    null,
-                    new List<Temp>(addr, new List<Temp>(right, null))
-                ));
-            }            
+                cmp1 += "`u1";
+                Temp u1 = munchExp(c.getRight());
+                ulist = new List<Temp>(u0, new List<Temp>(u1, null));
+            }
+            
+            emit(new OPER("cmp " + cmp0 + ", " + cmp1, null, ulist));            
         } else {
             Temp left = munchExp(c.getLeft());
 
