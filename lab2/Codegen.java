@@ -30,6 +30,85 @@ public class Codegen {
     }
 
     /**
+     * Helper function that returns the correct string for a memory access in an
+     * instruction. Valid memory accesses are:
+     * [reg], [reg+const] and [reg-const].
+     * 
+     * @param m
+     * @return
+     */
+    private String getMemAddressString(MEM m) {
+        // TODO: try [reg0+reg1] and [`u0+4*`u1] tiles.
+        Exp e = m.getExpression();
+        
+        // MEM(BINOP(-, TEMP, CONST)):
+        if (e instanceof BINOP &&
+            ((BINOP)e).getOperation() == BINOP.MINUS &&
+            ((BINOP)e).getLeft() instanceof TEMP &&
+            ((BINOP)e).getRight() instanceof CONST) {
+            long c = ((CONST)((BINOP)e).getRight()).getValue();
+            return "[`u0" + ((c != 0) ? ("-" + c) : "") + "]";
+        }
+
+        // MEM(BINOP(+, TEMP, CONST)):
+        if (e instanceof BINOP &&
+            ((BINOP)e).getOperation() == BINOP.PLUS &&
+            ((BINOP)e).getLeft() instanceof TEMP &&
+            ((BINOP)e).getRight() instanceof CONST) {
+            long c = ((CONST)((BINOP)e).getRight()).getValue();
+            return "[`u0" + ((c != 0) ? ("+" + c) : "") + "]";
+        }
+
+        // MEM(BINOP(+, CONST, TEMP)):
+        if (e instanceof BINOP &&
+            ((BINOP)e).getOperation() == BINOP.PLUS &&
+            ((BINOP)e).getLeft() instanceof CONST &&
+            ((BINOP)e).getRight() instanceof TEMP) {
+            long c = ((CONST)((BINOP)e).getLeft()).getValue();
+            return "[`u0" + ((c != 0) ? ("+" + c) : "") + "]";
+        }
+        
+        return "[`u0]";
+    }
+
+    /**
+     * Helper function like the one above that returns the temporary register
+     * instead.
+     * 
+     * @param m
+     * @return
+     */
+    private Temp getMemAddressTemp(MEM m) {
+        Exp e = m.getExpression();
+
+        // MEM(BINOP(-, TEMP, CONST)):
+        if (e instanceof BINOP &&
+            ((BINOP)e).getOperation() == BINOP.MINUS &&
+            ((BINOP)e).getLeft() instanceof TEMP &&
+            ((BINOP)e).getRight() instanceof CONST) {
+            return munchExp(((BINOP)e).getLeft());
+        }
+
+        // MEM(BINOP(+, TEMP, CONST)):
+        if (e instanceof BINOP &&
+            ((BINOP)e).getOperation() == BINOP.PLUS &&
+            ((BINOP)e).getLeft() instanceof TEMP &&
+            ((BINOP)e).getRight() instanceof CONST) {
+            return munchExp(((BINOP)e).getLeft());
+        }
+
+        // MEM(BINOP(+, CONST, TEMP)):
+        if (e instanceof BINOP &&
+            ((BINOP)e).getOperation() == BINOP.PLUS &&
+            ((BINOP)e).getLeft() instanceof CONST &&
+            ((BINOP)e).getRight() instanceof TEMP) {
+            return munchExp(((BINOP)e).getRight());
+        }
+
+        return munchExp(e);
+    }
+    
+    /**
      * Emits instructions for a given Tree.Stm node using the Maximal Munch
      * algorithm.
      *
@@ -330,59 +409,10 @@ public class Codegen {
      */
     Temp munchExp(MEM m) {
         Temp r = new Temp();
-        Exp e = m.getExpression();
-
-        // MEM(BINOP(-, TEMP, CONST)):
-        if (e instanceof BINOP &&
-            ((BINOP)e).getOperation() == BINOP.MINUS &&
-            ((BINOP)e).getLeft() instanceof TEMP &&
-            ((BINOP)e).getRight() instanceof CONST) {
-            Temp u = munchExp(((BINOP)e).getLeft());
-            long c = ((CONST)((BINOP)e).getRight()).getValue();
-            emit(new OPER(
-                "mov `d0, [`u0" + ((c != 0) ? ("-" + c) : "") + "]",
-                new List<Temp>(r, null),
-                new List<Temp>(u, null)
-            ));
-            return r;
-        }
-
-        // MEM(BINOP(+, TEMP, CONST)):
-        if (e instanceof BINOP &&
-            ((BINOP)e).getOperation() == BINOP.PLUS &&
-            ((BINOP)e).getLeft() instanceof TEMP &&
-            ((BINOP)e).getRight() instanceof CONST) {
-            Temp u = munchExp(((BINOP)e).getLeft());
-            long c = ((CONST)((BINOP)e).getRight()).getValue();
-            emit(new OPER(
-                "mov `d0, [`u0" + ((c != 0) ? ("+" + c) : "") + "]",
-                new List<Temp>(r, null),
-                new List<Temp>(u, null)
-            ));
-            return r;
-        }
-
-        // MEM(BINOP(+, CONST, TEMP)):
-        if (e instanceof BINOP &&
-            ((BINOP)e).getOperation() == BINOP.PLUS &&
-            ((BINOP)e).getLeft() instanceof CONST &&
-            ((BINOP)e).getRight() instanceof TEMP) {
-            Temp u = munchExp(((BINOP)e).getRight());
-            long c = ((CONST)((BINOP)e).getLeft()).getValue();
-            emit(new OPER(
-                "mov `d0, [`u0" + ((c != 0) ? ("+" + c) : "") + "]",
-                new List<Temp>(r, null),
-                new List<Temp>(u, null)
-            ));
-            return r;
-        }
-
-        // TODO: try MEM(BINOP(x, TEMP, TEMP))
-        Temp u = munchExp(e);
         emit(new OPER(
-            "mov `d0, [`u0]",
+            "mov `d0, " + this.getMemAddressString(m),
             new List<Temp>(r, null),
-            new List<Temp>(u, null)
+            new List<Temp>(this.getMemAddressTemp(m), null)
         ));
         return r;
     }
