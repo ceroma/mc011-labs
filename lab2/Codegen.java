@@ -540,6 +540,16 @@ public class Codegen {
             source += "dword " + this.getMemAddressString(((MEM)args.head), 0);
             ulist = this.getMemAddressTempList(((MEM)args.head));
             ulist.addAll(new List<Temp>(frame.SP(), null));
+        } else if (args.head instanceof BINOP &&
+            (((BINOP)args.head).getLeft() instanceof CONST) &&
+            (((BINOP)args.head).getRight() instanceof CONST)){
+            // PUSH(BINOP(?, CONST, CONST)):
+            source += this.evaluateBinop(
+                ((BINOP)args.head).getOperation(),
+                (CONST)((BINOP)args.head).getLeft(),
+                (CONST)((BINOP)args.head).getRight()
+            );
+            ulist = new List<Temp>(frame.SP(), null);
         } else {
         	source = "`u0";
             Temp u = munchExp(args.head);
