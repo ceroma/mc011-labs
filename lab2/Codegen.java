@@ -482,6 +482,10 @@ public class Codegen {
             // PUSH(CONST):
         	source += ((CONST)args.head).getValue();
         	ulist = new List<Temp>(frame.SP(), null);
+        } else if (args.head instanceof NAME) {
+            // PUSH(NAME):
+            source += ((NAME)args.head).getLabel().toString();
+            ulist = new List<Temp>(frame.SP(), null);
         } else {
         	source = "`u0";
             Temp u = munchExp(args.head);
