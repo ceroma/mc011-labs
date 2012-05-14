@@ -73,7 +73,7 @@ public class Codegen {
         if (e instanceof BINOP && ((BINOP)e).getOperation() == BINOP.PLUS) {
             return "[`u" + idx + "+`u" + (idx + 1) + "]";
         }
-        
+
         return "[`u" + idx + "]";
     }
 
@@ -425,15 +425,15 @@ public class Codegen {
      * @return
      */
     Temp munchExp(CALL c) {
+        List<Temp> ulist;
         List<Exp> args = c.getArguments();
-        // TODO: evaluate arguments after function's expression.
-        List<Temp> ulist = munchArgs(args);
 
         String source = "";
         Exp e = c.getCallable();
         if (e instanceof NAME) {
             // CALL(NAME):
             source = ((NAME)e).getLabel().toString();
+            ulist = munchArgs(args);
         } else {
             Temp u;
             if (e instanceof MEM) {
@@ -445,7 +445,7 @@ public class Codegen {
             	source = "`u0";
                 u = munchExp(e);
             }
-            ulist = new List<Temp>(u, ulist);
+            ulist = new List<Temp>(u, munchArgs(args));
         }
         emit(new OPER("call " + source, frame.calleeDefs(), ulist));
 
