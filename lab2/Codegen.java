@@ -506,6 +506,8 @@ public class Codegen {
      * @return
      */
     Temp munchExp(BINOP b) {
+        Temp r = new Temp();
+
         // BINOP(TIMES, A, B):
         if (b.getOperation() == BINOP.TIMES) {
             Temp left = munchExp(b.getLeft());
@@ -521,8 +523,8 @@ public class Codegen {
                 new List<Temp>(frame.eax, new List<Temp>(right, null))
             ));
 
-            // TODO: move this to a Temp.
-            return frame.eax;
+            emit(new assem.MOVE(r, frame.eax));
+            return r;
         }
 
         // BINOP(DIV, A, B):
@@ -543,8 +545,8 @@ public class Codegen {
                 new List<Temp>(right, list)
             ));
 
-            // TODO: move this to a Temp.
-            return frame.eax;
+            emit(new assem.MOVE(r, frame.eax));
+            return r;
         }
 
         String inst = "";
@@ -576,8 +578,6 @@ public class Codegen {
         }
 
         // TODO: larger tiles and logic operations.
-        Temp r = new Temp();
-
         // Left operand:
         if (b.getLeft() instanceof CONST) {
             // BINOP(?, CONST, ?):
