@@ -290,12 +290,18 @@ public class Codegen {
             // CJUMP(OP, MEM, EXP):
             String cmp0 = this.getMemAddressString((MEM)c.getLeft(), 0);
             List<Temp> ulist = this.getMemAddressTempList((MEM)c.getLeft());
-            ulist.addAll(new List<Temp>(munchExp(c.getRight()), null));             
-            emit(new OPER(
-                "cmp " + cmp0 + ", `u" + (ulist.size()-1),
-                null,
-                ulist
-            ));            
+            
+            String cmp1 = "";
+            if (c.getRight() instanceof CONST) {
+                // CJUMP(OP, MEM, CONST):
+                cmp0 = "dword " + cmp0;
+                cmp1 += ((CONST)c.getRight()).getValue();
+            } else {
+                ulist.addAll(new List<Temp>(munchExp(c.getRight()), null));
+                cmp1 = "`u" + (ulist.size() - 1);
+            }             
+            
+            emit(new OPER("cmp " + cmp0 + ", " + cmp1, null, ulist));            
         } else {
             Temp u0 = munchExp(c.getLeft());
 
@@ -655,7 +661,6 @@ public class Codegen {
                 break;
         }
 
-        // TODO: larger tiles and logic operations.
         // Left operand:
         if (b.getLeft() instanceof CONST) {
             // BINOP(?, CONST, ?):
