@@ -486,6 +486,11 @@ public class Codegen {
             // PUSH(NAME):
             source += ((NAME)args.head).getLabel().toString();
             ulist = new List<Temp>(frame.SP(), null);
+        } else if (args.head instanceof MEM) {
+            // PUSH(MEM):
+            source += "dword " + this.getMemAddressString(((MEM)args.head), 0);
+            ulist = this.getMemAddressTempList(((MEM)args.head));
+            ulist.addAll(new List<Temp>(frame.SP(), null));
         } else {
         	source = "`u0";
             Temp u = munchExp(args.head);
