@@ -121,7 +121,56 @@ public class Codegen {
 
         return new List<Temp>(munchExp(e), null);
     }
-    
+
+    /**
+     * Helper function that evaluates a BINOP between two constants.
+     * 
+     * @param op
+     * @param c1
+     * @param c2
+     * @return
+     */
+    private long evaluateBinop(int op, CONST c1, CONST c2) {
+        long result = 0;
+        long v1 = c1.getValue();
+        long v2 = c2.getValue();
+
+        switch (op) {
+            case BINOP.AND:
+                result = v1 & v2;
+                break;
+            case BINOP.ARSHIFT:
+                result = v1 >> v2;
+                break;
+            case BINOP.DIV:
+                result = v1 / v2;
+                break;
+            case BINOP.LSHIFT:
+                result = v1 << v2;
+                break;
+            case BINOP.MINUS:
+                result = v1 - v2;
+                break;
+            case BINOP.OR:
+                result = v1 | v2;
+                break;
+            case BINOP.PLUS:
+                result = v1 + v2;
+                break;
+            case BINOP.RSHIFT:
+                result = v1 >>> v2;
+                break;
+            case BINOP.TIMES:
+                result = v1 * v2;
+                break;
+            case BINOP.XOR:
+                result = v1 ^ v2;
+                break;          
+        }
+
+        return result;
+    }
+
     /**
      * Emits instructions for a given Tree.Stm node using the Maximal Munch
      * algorithm.
@@ -517,6 +566,16 @@ public class Codegen {
     Temp munchExp(BINOP b) {
         Temp r = new Temp();
 
+        // BINOP(CONST, CONST):
+        if ((b.getLeft() instanceof CONST) && (b.getRight() instanceof CONST)) {
+            long result = this.evaluateBinop(
+                b.getOperation(),
+                (CONST)b.getLeft(),
+                (CONST)b.getRight()
+            );
+        	emit(new OPER("mov `d0, " + result, new List<Temp>(r, null), null));
+        }
+
         // BINOP(TIMES, A, B):
         if (b.getOperation() == BINOP.TIMES) {
             Temp left = munchExp(b.getLeft());
@@ -558,55 +617,32 @@ public class Codegen {
             return r;
         }
 
-        // BINOP(CONST, CONST):
-        boolean simplify =
-            (b.getLeft() instanceof CONST) && (b.getRight() instanceof CONST);
-        long v1 = 0, v2 = 0, result = 0;
-        if (simplify) {
-            v1 = ((CONST)b.getLeft()).getValue();
-            v2 = ((CONST)b.getRight()).getValue();
-        }
-
         String inst = "";
         switch (b.getOperation()) {
             case BINOP.AND:
                 inst = "and";
-                if (simplify) result = v1 & v2;
                 break;
             case BINOP.ARSHIFT:
                 inst = "sar";
-                if (simplify) result = v1 >> v2;
                 break;
             case BINOP.LSHIFT:
                 inst = "shl";
-                if (simplify) result = v1 << v2;
                 break;
             case BINOP.MINUS:
                 inst = "sub";
-                if (simplify) result = v1 - v2;
                 break;
             case BINOP.OR:
                 inst = "or";
-                if (simplify) result = v1 | v2;
                 break;
             case BINOP.PLUS:
                 inst = "add";
-                if (simplify) result = v1 + v2;
                 break;
             case BINOP.RSHIFT:
                 inst = "shr";
-                if (simplify) result = v1 >>> v2;
                 break;
             case BINOP.XOR:
                 inst = "xor";
-                if (simplify) result = v1 ^ v2;
                 break;
-        }
-
-        // BINOP(CONST, CONST):
-        if (simplify) {
-            emit(new OPER("mov `d0, " + result, new List<Temp>(r, null), null));
-            return r;            
         }
 
         // TODO: larger tiles and logic operations.
