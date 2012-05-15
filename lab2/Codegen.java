@@ -345,7 +345,7 @@ public class Codegen {
         Exp src = m.getSource();
         Exp dst = m.getDestination();
 
-        // MOVE(MEM, X):
+        // MOVE(MEM, EXP):
         if (dst instanceof MEM) {
             String sdst = this.getMemAddressString((MEM)dst, 0);
             List<Temp> ulist = this.getMemAddressTempList((MEM)dst);
@@ -374,7 +374,7 @@ public class Codegen {
             return;
         }
 
-        // MOVE(X, CONST):
+        // MOVE(TEMP, CONST):
         if (src instanceof CONST) {
             Temp tdst = munchExp(dst);
             emit(new OPER(
@@ -384,7 +384,37 @@ public class Codegen {
             ));
             return;
         }
+        
+        // MOVE(TEMP, MEM):
+        if (src instanceof MEM) {
+            Temp tdst = munchExp(dst);
+            emit(new OPER(
+                "mov `d0, " + this.getMemAddressString((MEM)src, 1),
+                new List<Temp>(tdst, null),
+                this.getMemAddressTempList((MEM)src)
+            ));
+            return;
+        }
+        
+        // MOVE(TEMP, BINOP(?, CONST, CONST)):
+        if (src instanceof BINOP &&
+            ((BINOP)src).getLeft() instanceof CONST &&
+            ((BINOP)src).getRight() instanceof CONST) {
+            Temp tdst = munchExp(dst);
+            long result = this.evaluateBinop(
+                ((BINOP)src).getOperation(),
+                (CONST)((BINOP)src).getLeft(),
+                (CONST)((BINOP)src).getRight()
+            );
+            emit(new OPER(
+                "mov `d0, " + result,
+                new List<Temp>(tdst, null),
+                null
+            ));
+            return;           
+        }
 
+        // MOVE(TEMP, EXP):
         emit(new assem.MOVE(munchExp(dst), munchExp(src)));
     }
 
