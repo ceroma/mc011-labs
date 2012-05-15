@@ -389,7 +389,7 @@ public class Codegen {
         if (src instanceof MEM) {
             Temp tdst = munchExp(dst);
             emit(new OPER(
-                "mov `d0, " + this.getMemAddressString((MEM)src, 1),
+                "mov `d0, " + this.getMemAddressString((MEM)src, 0),
                 new List<Temp>(tdst, null),
                 this.getMemAddressTempList((MEM)src)
             ));
