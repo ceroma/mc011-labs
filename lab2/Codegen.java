@@ -458,7 +458,7 @@ public class Codegen {
      * @return
      */
     Temp munchExp(TEMP t) {
-    	return t.getTemp();
+        return t.getTemp();
     }
 
     /**
@@ -548,7 +548,7 @@ public class Codegen {
                 source = this.getMemAddressString((MEM)e, 0);
                 ulist = this.getMemAddressTempList((MEM)e);
             } else {
-            	source = "`u0";
+                source = "`u0";
                 ulist = new List<Temp>(munchExp(e), null);
             }
             ulist.addAll(munchArgs(args));
@@ -586,8 +586,8 @@ public class Codegen {
         String source = "";
         if (args.head instanceof CONST) {
             // PUSH(CONST):
-        	source += ((CONST)args.head).getValue();
-        	ulist = new List<Temp>(frame.SP(), null);
+            source += ((CONST)args.head).getValue();
+            ulist = new List<Temp>(frame.SP(), null);
         } else if (args.head instanceof NAME) {
             // PUSH(NAME):
             source += ((NAME)args.head).getLabel().toString();
@@ -604,7 +604,7 @@ public class Codegen {
             source += this.evaluateConstsBinop((BINOP)args.head);
             ulist = new List<Temp>(frame.SP(), null);
         } else {
-        	source = "`u0";
+            source = "`u0";
             Temp u = munchExp(args.head);
             rlist = new List<Temp>(u, rlist);
             ulist = new List<Temp>(u, new List<Temp>(frame.SP(), null));
@@ -632,7 +632,7 @@ public class Codegen {
         // BINOP(CONST, CONST):
         if ((b.getLeft() instanceof CONST) && (b.getRight() instanceof CONST)) {
             long result = this.evaluateConstsBinop(b);
-        	emit(new OPER("mov `d0, " + result, new List<Temp>(r, null), null));
+            emit(new OPER("mov `d0, " + result, new List<Temp>(r, null), null));
         }
 
         // BINOP(TIMES, A, B):
