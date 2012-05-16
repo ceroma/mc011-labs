@@ -712,6 +712,15 @@ public class Codegen {
                 new List<Temp>(r, null),
                 null
             ));
+        } else if (b.getLeft() instanceof BINOP &&
+            ((BINOP)b.getLeft()).getLeft() instanceof CONST &&
+            ((BINOP)b.getLeft()).getRight() instanceof CONST) {
+            // BINOP(?, BINOP(?, CONST, CONST), ?):
+            emit(new OPER(
+                "mov `d0, " + this.evaluateConstsBinop((BINOP)b.getLeft()),
+                new List<Temp>(r, null),
+                null
+            ));
         } else {
             Temp left = munchExp(b.getLeft());
             emit(new assem.MOVE(r, left));
@@ -723,6 +732,11 @@ public class Codegen {
         if (b.getRight() instanceof CONST) {
             // BINOP(?, ?, CONST):
             operand += ((CONST)b.getRight()).getValue();
+        } else if (b.getLeft() instanceof BINOP &&
+            ((BINOP)b.getLeft()).getLeft() instanceof CONST &&
+            ((BINOP)b.getLeft()).getRight() instanceof CONST) {
+            // BINOP(?, ?, BINOP(?, CONST, CONST)):
+            operand += this.evaluateConstsBinop((BINOP)b.getLeft());
         } else {
             operand = "`u0";
             Temp right = munchExp(b.getRight());
