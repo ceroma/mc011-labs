@@ -33,14 +33,14 @@ public class Codegen {
      * Helper function that returns the correct string for a memory access in an
      * instruction. Valid memory accesses are:
      * [reg], [reg+const] and [reg-const].
-     * 
+     *
      * @param m
      * @param idx Base index for the first register in the string (`u<idx>).
      * @return
      */
     private String getMemAddressString(MEM m, int idx) {
         Exp e = m.getExpression();
-        
+
         // MEM(BINOP(-, TEMP, CONST)):
         if (e instanceof BINOP &&
             ((BINOP)e).getOperation() == BINOP.MINUS &&
@@ -67,7 +67,7 @@ public class Codegen {
             long c = ((CONST)((BINOP)e).getLeft()).getValue();
             return "[`u" + idx + ((c != 0) ? ("+" + c) : "") + "]";
         }
-        
+
         // MEM(BINOP(+, EXP, EXP)):
         if (e instanceof BINOP && ((BINOP)e).getOperation() == BINOP.PLUS) {
             return "[`u" + idx + "+`u" + (idx + 1) + "]";
@@ -79,7 +79,7 @@ public class Codegen {
     /**
      * Helper function like the one above that returns the temporary register
      * instead.
-     * 
+     *
      * @param m
      * @return
      */
@@ -123,7 +123,7 @@ public class Codegen {
 
     /**
      * Helper function that evaluates a BINOP between two constants.
-     * 
+     *
      * @param b
      * @return
      */
@@ -166,7 +166,7 @@ public class Codegen {
                 break;
             case BINOP.XOR:
                 result = v1 ^ v2;
-                break;          
+                break;
         }
 
         return result;
@@ -291,7 +291,7 @@ public class Codegen {
         if (c.getLeft() instanceof MEM) {
             String cmp0 = this.getMemAddressString((MEM)c.getLeft(), 0);
             List<Temp> ulist = this.getMemAddressTempList((MEM)c.getLeft());
-            
+
             String cmp1 = "";
             if (c.getRight() instanceof CONST) {
                 // CJUMP(OP, MEM, CONST):
@@ -307,9 +307,9 @@ public class Codegen {
                 // CJUMP(OP, MEM, EXP):
                 ulist.addAll(new List<Temp>(munchExp(c.getRight()), null));
                 cmp1 = "`u" + (ulist.size() - 1);
-            }             
-            
-            emit(new OPER("cmp " + cmp0 + ", " + cmp1, null, ulist));            
+            }
+
+            emit(new OPER("cmp " + cmp0 + ", " + cmp1, null, ulist));
         } else {
             Temp u0 = munchExp(c.getLeft());
 
@@ -335,7 +335,7 @@ public class Codegen {
                 Temp u1 = munchExp(c.getRight());
                 ulist = new List<Temp>(u0, new List<Temp>(u1, null));
             }
-            
+
             emit(new OPER("cmp `u0, " + cmp1, null, ulist));
         }
 
@@ -363,7 +363,7 @@ public class Codegen {
         if (dst instanceof MEM) {
             String sdst = this.getMemAddressString((MEM)dst, 0);
             List<Temp> ulist = this.getMemAddressTempList((MEM)dst);
-            
+
             String ssrc = "";
             if (src instanceof CONST) {
                 // MOVE(MEM, CONST):
@@ -378,9 +378,9 @@ public class Codegen {
             } else {
                 ulist.addAll(new List<Temp>(munchExp(src), null));
                 ssrc = "`u" + (ulist.size() - 1);
-            }             
-            
-            emit(new OPER("mov " + sdst + ", " + ssrc, null, ulist)); 
+            }
+
+            emit(new OPER("mov " + sdst + ", " + ssrc, null, ulist));
             return;
         }
 
@@ -394,7 +394,7 @@ public class Codegen {
             ));
             return;
         }
-        
+
         // MOVE(TEMP, MEM):
         if (src instanceof MEM) {
             Temp tdst = munchExp(dst);
@@ -405,7 +405,7 @@ public class Codegen {
             ));
             return;
         }
-        
+
         // MOVE(TEMP, BINOP(?, CONST, CONST)):
         if (src instanceof BINOP &&
             ((BINOP)src).getLeft() instanceof CONST &&
@@ -416,7 +416,7 @@ public class Codegen {
                 new List<Temp>(tdst, null),
                 null
             ));
-            return;           
+            return;
         }
 
         // MOVE(TEMP, EXP):
