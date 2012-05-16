@@ -534,14 +534,13 @@ public class Codegen {
             Temp u;
             if (e instanceof MEM) {
                 // CALL(MEM):
-                // TODO: use getMemAddress* once we treat [reg+4*reg].
-                source = "[`u0]";
-                u = munchExp(((MEM)e).getExpression());
+                source = this.getMemAddressString((MEM)e, 0) + "; alllll";
+                ulist = this.getMemAddressTempList((MEM)e);
             } else {
             	source = "`u0";
-                u = munchExp(e);
+                ulist = new List<Temp>(munchExp(e), null);
             }
-            ulist = new List<Temp>(u, munchArgs(args));
+            ulist.addAll(munchArgs(args));
         }
         emit(new OPER("call " + source, frame.calleeDefs(), ulist));
 
