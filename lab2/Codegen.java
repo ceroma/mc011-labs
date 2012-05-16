@@ -39,7 +39,6 @@ public class Codegen {
      * @return
      */
     private String getMemAddressString(MEM m, int idx) {
-        // TODO: try [reg0+reg1] and [`u0+4*`u1] tiles.
         Exp e = m.getExpression();
         
         // MEM(BINOP(-, TEMP, CONST)):
@@ -298,6 +297,12 @@ public class Codegen {
                 // CJUMP(OP, MEM, CONST):
                 cmp0 = "dword " + cmp0;
                 cmp1 += ((CONST)c.getRight()).getValue();
+            } else if (c.getRight() instanceof BINOP &&
+                ((BINOP)c.getRight()).getLeft() instanceof CONST &&
+                ((BINOP)c.getRight()).getRight() instanceof CONST) {
+                // CJUMP(OP, MEM, BINOP(?, CONST, CONST)):
+                cmp0 = "dword " + cmp0;
+                cmp1 += this.evaluateConstsBinop((BINOP)c.getRight());
             } else {
                 // CJUMP(OP, MEM, EXP):
                 ulist.addAll(new List<Temp>(munchExp(c.getRight()), null));
@@ -319,6 +324,12 @@ public class Codegen {
                 cmp1 = this.getMemAddressString((MEM)c.getRight(), 1);
                 ulist = this.getMemAddressTempList((MEM)c.getRight());
                 ulist = new List<Temp>(u0, ulist);
+            } else if (c.getRight() instanceof BINOP &&
+                ((BINOP)c.getRight()).getLeft() instanceof CONST &&
+                ((BINOP)c.getRight()).getRight() instanceof CONST) {
+                // CJUMP(OP, EXP, BINOP(?, CONST, CONST)):
+                cmp1 += this.evaluateConstsBinop((BINOP)c.getRight());
+                ulist = new List<Temp>(u0, null);
             } else {
                 cmp1 = "`u1";
                 Temp u1 = munchExp(c.getRight());
@@ -534,7 +545,7 @@ public class Codegen {
             Temp u;
             if (e instanceof MEM) {
                 // CALL(MEM):
-                source = this.getMemAddressString((MEM)e, 0) + "; alllll";
+                source = this.getMemAddressString((MEM)e, 0);
                 ulist = this.getMemAddressTempList((MEM)e);
             } else {
             	source = "`u0";
