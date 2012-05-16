@@ -732,11 +732,15 @@ public class Codegen {
         if (b.getRight() instanceof CONST) {
             // BINOP(?, ?, CONST):
             operand += ((CONST)b.getRight()).getValue();
-        } else if (b.getLeft() instanceof BINOP &&
-            ((BINOP)b.getLeft()).getLeft() instanceof CONST &&
-            ((BINOP)b.getLeft()).getRight() instanceof CONST) {
+        } else if (b.getRight() instanceof BINOP &&
+            ((BINOP)b.getRight()).getLeft() instanceof CONST &&
+            ((BINOP)b.getRight()).getRight() instanceof CONST) {
             // BINOP(?, ?, BINOP(?, CONST, CONST)):
-            operand += this.evaluateConstsBinop((BINOP)b.getLeft());
+            operand += this.evaluateConstsBinop((BINOP)b.getRight());
+        } else if (b.getRight() instanceof MEM) {
+            // BINOP(?, ?, MEM):
+            operand += this.getMemAddressString((MEM)b.getRight(), 1);
+            ulist.addAll(this.getMemAddressTempList((MEM)b.getRight()));
         } else {
             operand = "`u0";
             Temp right = munchExp(b.getRight());
