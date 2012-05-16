@@ -125,12 +125,14 @@ public class Codegen {
     /**
      * Helper function that evaluates a BINOP between two constants.
      * 
-     * @param op
-     * @param c1
-     * @param c2
+     * @param b
      * @return
      */
-    private long evaluateBinop(int op, CONST c1, CONST c2) {
+    private long evaluateConstsBinop(BINOP b) {
+        int op = b.getOperation();
+        CONST c1 = (CONST)b.getLeft();
+        CONST c2 = (CONST)b.getRight();
+
         long result = 0;
         long v1 = c1.getValue();
         long v2 = c2.getValue();
@@ -236,6 +238,7 @@ public class Codegen {
             emit(new OPER("jmp `j0", new List<Label>(l, null)));
         } else {
             Temp u = munchExp(e);
+            System.out.println(e.getClass());
             emit(new OPER(
                 "jmp `u0",
                 null,
@@ -360,11 +363,7 @@ public class Codegen {
                 ((BINOP)src).getRight() instanceof CONST) {
                 // MOVE(MEM, BINOP(?, CONST, CONST)):
                 sdst = "dword " + sdst;
-                ssrc += this.evaluateBinop(
-                    ((BINOP)src).getOperation(),
-                    (CONST)((BINOP)src).getLeft(),
-                    (CONST)((BINOP)src).getRight()
-                );
+                ssrc += this.evaluateConstsBinop((BINOP)src);
             } else {
                 ulist.addAll(new List<Temp>(munchExp(src), null));
                 ssrc = "`u" + (ulist.size() - 1);
@@ -401,13 +400,8 @@ public class Codegen {
             ((BINOP)src).getLeft() instanceof CONST &&
             ((BINOP)src).getRight() instanceof CONST) {
             Temp tdst = munchExp(dst);
-            long result = this.evaluateBinop(
-                ((BINOP)src).getOperation(),
-                (CONST)((BINOP)src).getLeft(),
-                (CONST)((BINOP)src).getRight()
-            );
             emit(new OPER(
-                "mov `d0, " + result,
+                "mov `d0, " + this.evaluateConstsBinop((BINOP)src),
                 new List<Temp>(tdst, null),
                 null
             ));
@@ -597,11 +591,7 @@ public class Codegen {
             (((BINOP)args.head).getLeft() instanceof CONST) &&
             (((BINOP)args.head).getRight() instanceof CONST)) {
             // PUSH(BINOP(?, CONST, CONST)):
-            source += this.evaluateBinop(
-                ((BINOP)args.head).getOperation(),
-                (CONST)((BINOP)args.head).getLeft(),
-                (CONST)((BINOP)args.head).getRight()
-            );
+            source += this.evaluateConstsBinop((BINOP)args.head);
             ulist = new List<Temp>(frame.SP(), null);
         } else {
         	source = "`u0";
@@ -631,11 +621,7 @@ public class Codegen {
 
         // BINOP(CONST, CONST):
         if ((b.getLeft() instanceof CONST) && (b.getRight() instanceof CONST)) {
-            long result = this.evaluateBinop(
-                b.getOperation(),
-                (CONST)b.getLeft(),
-                (CONST)b.getRight()
-            );
+            long result = this.evaluateConstsBinop(b);
         	emit(new OPER("mov `d0, " + result, new List<Temp>(r, null), null));
         }
 
