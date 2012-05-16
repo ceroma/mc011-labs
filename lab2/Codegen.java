@@ -128,15 +128,11 @@ public class Codegen {
      * @return
      */
     private long evaluateConstsBinop(BINOP b) {
-        int op = b.getOperation();
-        CONST c1 = (CONST)b.getLeft();
-        CONST c2 = (CONST)b.getRight();
-
         long result = 0;
-        long v1 = c1.getValue();
-        long v2 = c2.getValue();
+        long v1 = ((CONST)b.getLeft()).getValue();
+        long v2 = ((CONST)b.getRight()).getValue();
 
-        switch (op) {
+        switch (b.getOperation()) {
             case BINOP.AND:
                 result = v1 & v2;
                 break;
