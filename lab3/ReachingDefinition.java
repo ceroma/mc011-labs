@@ -55,26 +55,57 @@ public class ReachingDefinition {
             }
         }
         
-        // Initializes gen(s) and kill(s):
+        // Initializes gen[n] and kill[n]:
         gen = new HashMap<Node, Set<Node>>();
         kill = new HashMap<Node, Set<Node>>();
         for (Node n : cfg.nodes()) {
-            // gen(s) = {d}:
-            Set<Node> gen_s = new HashSet<Node>();
+            // gen[n] = {d}:
+            Set<Node> gen_n = new HashSet<Node>();
             if (cfg.getInstr(n).isMoveBetweenTemps()) {
-                gen_s.add(n);
+                gen_n.add(n);
             }
-            gen.put(n, gen_s);
+            gen.put(n, gen_n);
             
-            // kill(s) = {defs(t) - d}:
-            Set<Node> kill_s = new HashSet<Node>();
+            // kill[n] = {defs(t) - d}:
+            Set<Node> kill_n = new HashSet<Node>();
             if (cfg.getInstr(n).isMoveBetweenTemps()) {
                 for (Temp t : cfg.getDefined(n)) {
-                    kill_s.addAll(defs.get(t));
-                    kill_s.remove(n);
+                    kill_n.addAll(defs.get(t));
+                    kill_n.remove(n);
                 }
             }
-            kill.put(n,  kill_s);
+            kill.put(n, kill_n);
         }
+        
+        // Compute the Reaching Definitions:
+        in = new HashMap<Node, Set<Node>>();
+        out = new HashMap<Node, Set<Node>>();
+        Map<Node, Set<Node>> old_in = new HashMap<Node, Set<Node>>();
+        Map<Node, Set<Node>> old_out = new HashMap<Node, Set<Node>>();
+        do {
+            // Since in[n] and out[n] always increase, we can just .putAll:
+            old_in.putAll(in);
+            old_out.putAll(out);
+            
+            for (Node n : cfg.nodes()) {
+                // in[n] = U_{p \in pred[n]} out[p]:
+                Set<Node> in_n = new HashSet<Node>();
+                for (Node p : n.getPreds()) {
+                    in_n.addAll(out.get(p));
+                }
+                in.put(n,  in_n);
+                
+                // in[n] - kill[n]:
+                Set<Node> diff = new HashSet<Node>();
+                diff.addAll(in_n);
+                diff.removeAll(kill.get(n));
+
+                // out[n] = gen[n] U (in[n] - kill[n]):
+                Set<Node> out_n = new HashSet<Node>();
+                out_n.addAll(gen.get(n));
+                out_n.addAll(diff);
+                out.put(n,  out_n);
+            }            
+        } while (!in.equals(old_in) || !out.equals(old_out));
     }
 }
