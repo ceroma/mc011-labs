@@ -90,10 +90,14 @@ public class ReachingDefinition {
             for (Node n : cfg.nodes()) {
                 // in[n] = U_{p \in pred[n]} out[p]:
                 Set<Node> in_n = new HashSet<Node>();
-                for (Node p : n.getPreds()) {
-                    in_n.addAll(out.get(p));
+                if (n.getPreds() != null) {
+                    for (Node p : n.getPreds()) {
+                        if (out.get(p) != null) {
+                            in_n.addAll(out.get(p));
+                        }
+                    }
                 }
-                in.put(n,  in_n);
+                in.put(n, in_n);
                 
                 // in[n] - kill[n]:
                 Set<Node> diff = new HashSet<Node>();
@@ -104,7 +108,7 @@ public class ReachingDefinition {
                 Set<Node> out_n = new HashSet<Node>();
                 out_n.addAll(gen.get(n));
                 out_n.addAll(diff);
-                out.put(n,  out_n);
+                out.put(n, out_n);
             }            
         } while (!in.equals(old_in) || !out.equals(old_out));
     }
