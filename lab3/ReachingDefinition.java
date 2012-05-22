@@ -54,5 +54,27 @@ public class ReachingDefinition {
                 defs.put(t, Dt);
             }
         }
+        
+        // Initializes gen(s) and kill(s):
+        gen = new HashMap<Node, Set<Node>>();
+        kill = new HashMap<Node, Set<Node>>();
+        for (Node n : cfg.nodes()) {
+            // gen(s) = {d}:
+            Set<Node> gen_s = new HashSet<Node>();
+            if (cfg.getInstr(n).isMoveBetweenTemps()) {
+                gen_s.add(n);
+            }
+            gen.put(n, gen_s);
+            
+            // kill(s) = {defs(t) - d}:
+            Set<Node> kill_s = new HashSet<Node>();
+            if (cfg.getInstr(n).isMoveBetweenTemps()) {
+                for (Temp t : cfg.getDefined(n)) {
+                    kill_s.addAll(defs.get(t));
+                    kill_s.remove(n);
+                }
+            }
+            kill.put(n,  kill_s);
+        }
     }
 }
