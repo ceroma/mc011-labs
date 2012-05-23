@@ -32,7 +32,9 @@ public class ConstPropagation {
         for (Node n : cfg.nodes()) {
             if (cfg.getUsed(n) == null) continue;
             
+            // Try to propagate each temporary used in this node:
             for (Temp t : cfg.getUsed(n)) {
+                // Get definitions that reach this node and define t:
                 reaching_def_t = null;
                 num_reaching_def_t = 0;
                 for (Node d : dfa.getIn(n)) {
@@ -42,14 +44,17 @@ public class ConstPropagation {
                     }
                 }
                 
+                // Don't propagate if reaching definition is not unique:
                 if (num_reaching_def_t != 1) {
                     continue;
                 }
                 
+                // Don't propagate if it's not a constant definition:
                 if (!cfg.getInstr(reaching_def_t).isMoveFromConstant()) {
                     continue;
                 }
 
+                // Propagate constant:
                 cte = this.getConstant(cfg.getInstr(reaching_def_t));
                 this.propagateConstant(cfg.getInstr(n), cte);                
             }
